@@ -63,6 +63,7 @@ def simulate(
     *,
     service_cv: float = 0.0,
     seed: int = 0,
+    pooled_service_rate_per_hour: float | None = None,
 ) -> tuple[dict, pd.DataFrame]:
     """Replay alerts through a single pooled service process.
 
@@ -100,7 +101,25 @@ def simulate(
         1e-9,
     )
     mean_alert_arrival_rate = len(alerts) / horizon_hours
-    pooled_service_rate = max(mean_alert_arrival_rate * capacity_ratio, 1e-9)
+    if pooled_service_rate_per_hour is None:
+        pooled_service_rate = max(
+            mean_alert_arrival_rate * capacity_ratio,
+            1e-9,
+        )
+        capacity_mode = "relative_to_realized_test_alerts"
+    else:
+        if pooled_service_rate_per_hour <= 0:
+            raise ValueError(
+                "pooled_service_rate_per_hour must be positive"
+            )
+        pooled_service_rate = float(
+            pooled_service_rate_per_hour
+        )
+        capacity_mode = "fixed_external_service_rate"
+
+    effective_capacity_ratio = (
+        pooled_service_rate / mean_alert_arrival_rate
+    )
     mean_service_hours = 1.0 / pooled_service_rate
 
     rng = np.random.default_rng(seed)
@@ -195,7 +214,11 @@ def simulate(
         "realized_test_alert_rate": len(alerts) / len(test),
         "alerts": int(len(alerts)),
         "fraud_alerts": int(fraud.sum()),
-        "capacity_ratio_to_mean_alert_arrival": capacity_ratio,
+        "requested_capacity_ratio": capacity_ratio,
+        "capacity_mode": capacity_mode,
+        "capacity_ratio_to_mean_alert_arrival": (
+            effective_capacity_ratio
+        ),
         "mean_alert_arrival_rate_per_hour": mean_alert_arrival_rate,
         "pooled_service_rate_per_hour": pooled_service_rate,
         "mean_service_interval_minutes": 60.0 / pooled_service_rate,
