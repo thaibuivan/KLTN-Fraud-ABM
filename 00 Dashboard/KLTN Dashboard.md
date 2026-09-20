@@ -12,11 +12,11 @@ Phát triển từ pilot `FinRisk-ABM-Policy-Simulation` thành một **empirica
 - **Baseline risk engine:** regularized logistic regression first.
 - **Core operational mechanism:** persistent alert queue.
 - **First structural comparison:** FIFO vs risk-priority.
-- **Capacity representation:** relative pooled capacity ratio, not invented cases/day.
+- **Capacity representation:** relative/fixed pooled capacity experiments, not invented analysts/day.
 - **IEEE-CIS:** optional external robustness, not second full ABM.
 
 ## Current milestone
-**Robustness of queue/policy conclusions.**
+**Freeze core MVP after robustness + structural validation.**
 
 ### Completed
 1. [[Data Audit]] ✅
@@ -30,7 +30,11 @@ Phát triển từ pilot `FinRisk-ABM-Policy-Simulation` thành một **empirica
 9. Expanding-window temporal robustness ✅
 10. Risk-model structural sensitivity ✅
 11. Stochastic service-time robustness over 100 seeds ✅
-12. Queue verification tests ✅
+12. Fixed-capacity alert-threshold sensitivity ✅
+13. Starvation/service-equity diagnostics ✅
+14. Queue verification tests: **5 passed** ✅
+15. Practitioner validation question guide drafted ✅
+16. GVHD milestone update drafted ✅
 
 ## Literature
 - [[AML-CFSim 2025]]
@@ -52,17 +56,19 @@ Phát triển từ pilot `FinRisk-ABM-Policy-Simulation` thành một **empirica
 - [[Xente Baseline Risk Model Feasibility]]
 - [[Xente Queue Pilot v0.1]]
 - [[Xente Robustness Pack v0.1]]
+- [[Xente Alert-rate and Starvation Sensitivity v0.1]]
 
 ## Current robust insight
-Across the tested Xente score streams:
+Across tested Xente score streams:
 - scarce service capacity creates backlog/delay;
+- threshold changes can create overload under fixed staffing;
 - risk-priority reallocates scarce service toward high-risk alerts;
 - fraud capture within a finite horizon generally increases relative to FIFO;
-- tail waiting time for lower-priority alerts worsens;
+- tail waiting/starvation for lower-priority alerts worsens;
 - the qualitative result persists after removing current-Value features;
-- the result persists under stochastic lognormal service times.
+- the result persists under stochastic service times.
 
-This is still a **conditional simulation result**, not a universal policy recommendation.
+This is a **conditional simulation result**, not a universal policy recommendation.
 
 ## Important caution
 Xente has unusually strong transaction-Value/context signal.
@@ -72,21 +78,24 @@ The amount-only baseline is nearly as strong as the full logistic model on the f
 Therefore:
 - classifier novelty is not the contribution;
 - policy conclusions must be reported across time/model structures;
-- do not treat the final test PR-AUC as stable production performance.
+- final-test PR-AUC is not treated as stable production performance.
 
 ## Current blockers
-- transaction-fraud review-time range is still weakly grounded;
+- practitioner validation has been drafted but not yet conducted;
+- transaction-fraud review-time range remains weakly grounded;
 - recovery/delay-to-loss mechanism is not identified;
 - false-positive/customer-friction monetary value is context-specific;
-- no practitioner validation of queue priority/workflow yet.
+- alert aging/expiry rule is not yet justified.
 
 ## Next priorities
-1. Alert-threshold robustness: 0.5%, 1%, 2%, 5%.
-2. Add explicit starvation/service-equity metrics.
-3. Variable-capacity team structure (not only stochastic service time).
-4. Draft practitioner-validation questions.
-5. Decide whether cost-sensitive priority belongs in core or secondary analysis.
-6. After these, freeze MVP specification for GVHD review.
+1. Conduct practitioner structural validation using [[Practitioner Validation Questions v0.1]].
+2. Ask GVHD the five decisions in [[GVHD Update - Xente Queue Milestone]].
+3. Based on feedback, decide whether to add:
+   - hybrid aging priority;
+   - variable team capacity;
+   - cost-sensitive monetary layer.
+4. Freeze core mechanisms and final experiment grid.
+5. Then write Methodology from the frozen implementation.
 
 ## Rule
-Không làm LLM, fraudster cognition hoặc dashboard trước khi robustness của core queue/policy model đủ rõ.
+Không làm LLM, fraudster cognition hoặc dashboard trước khi core mechanism được freeze.
