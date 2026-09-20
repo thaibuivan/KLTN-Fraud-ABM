@@ -1,0 +1,31 @@
+# Obsidian local state
+.obsidian/
+.trash/
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Office temp
+~$*.docx
+~$*.xlsx
+~$*.pptx
+
+# Large/raw data should be managed outside Git unless explicitly intended
+data/raw/
+data/interim/
+models/
