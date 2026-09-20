@@ -53,10 +53,13 @@ Candidate state:
 - optional account status;
 - accumulated friction/intervention count only if used by an RQ.
 
-### Account / Subscription
-Use `AccountId` and `SubscriptionId` as nested attributes/grouping levels first.
+### Account / Subscription identifiers
+Local profiling corrected an earlier assumption: `AccountId` and `SubscriptionId` are not clean nested customer entities. Some IDs are shared across many customers.
 
-Do not make them independent agents unless a specific interaction requires it.
+Baseline treatment:
+- `CustomerId` = persistent stateful entity;
+- `AccountId` / `SubscriptionId` = transaction-context identifiers/features;
+- no separate Account/Subscription agents unless later evidence justifies them.
 
 ### Alert Queue
 Khác legacy daily capacity cut-off, queue mới cần state qua time:
@@ -140,6 +143,7 @@ Nếu final model không cần feedback beyond queue mechanics, thesis should us
 ## Decisions
 - [x] Primary data: Xente.
 - [x] CustomerId = primary stateful entity.
+- [x] AccountId / SubscriptionId = context identifiers, not independent agents.
 - [x] Baseline = chronological observed-event replay.
 - [x] Simulation clock = event-driven.
 - [x] Baseline risk engine candidate = regularized logistic regression.
