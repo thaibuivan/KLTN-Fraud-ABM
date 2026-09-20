@@ -137,3 +137,31 @@ def test_fixed_service_rate_is_independent_of_threshold():
         summary_strict["capacity_mode"]
         == "fixed_external_service_rate"
     )
+
+
+def test_variable_team_capacity_is_seed_reproducible():
+    df = scored_frame()
+    summary_a, reviewed_a = simulate(
+        df,
+        threshold=0.0,
+        capacity_ratio=1.0,
+        discipline="fifo",
+        team_capacity_cv=0.4,
+        seed=7,
+    )
+    summary_b, reviewed_b = simulate(
+        df,
+        threshold=0.0,
+        capacity_ratio=1.0,
+        discipline="fifo",
+        team_capacity_cv=0.4,
+        seed=7,
+    )
+    assert (
+        reviewed_a["team_capacity_multiplier"].tolist()
+        == reviewed_b["team_capacity_multiplier"].tolist()
+    )
+    assert (
+        summary_a["backlog_end"]
+        == summary_b["backlog_end"]
+    )
