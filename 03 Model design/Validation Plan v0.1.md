@@ -68,8 +68,11 @@ Current pilot:
 - 100 seeds;
 - CV is an explicit stress assumption, not empirical review-time calibration.
 
+Additional stochastic/structural sensitivity completed:
+- day-level pooled-team capacity variation with CV = 0.3 and 0.6 stress scenarios;
+- 100 seeds for variable-capacity scenarios.
+
 Future stochastic components only if justified:
-- variable team capacity;
 - analyst decision error;
 - fraud-regime perturbation.
 
@@ -90,8 +93,10 @@ Completed:
 - FIFO vs risk-priority;
 - full logistic vs no-current-value vs amount-only score model.
 
+Completed:
+- constant vs variable team capacity.
+
 Possible later:
-- constant vs variable team capacity;
 - risk-priority vs aging/hybrid priority;
 - shifted fraud regime.
 
@@ -101,7 +106,8 @@ Possible later:
 - effect persists under stochastic service times;
 - effect persists with a materially weaker score model;
 - threshold-induced alert growth can create severe backlog under fixed staffing;
-- risk-priority can create severe low-priority tail waiting/starvation.
+- risk-priority can create severe low-priority tail waiting/starvation;
+- the same qualitative trade-off persists under variable day-level team capacity.
 
 This remains conditional on the Xente environment and tested structures.
 
@@ -133,6 +139,7 @@ Allowed claim form:
 - [x] Stochastic service time + multiple seeds.
 - [x] Threshold/alert-rate sensitivity with fixed staffing.
 - [x] Starvation/service-equity diagnostics.
+- [x] Variable team-capacity sensitivity.
 - [ ] Practitioner structural validation.
 - [ ] Decide aging/expiry/hybrid mechanism.
 - [ ] Freeze final experiment grid.
