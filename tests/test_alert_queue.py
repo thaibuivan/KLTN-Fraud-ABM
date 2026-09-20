@@ -109,3 +109,31 @@ def test_stochastic_service_is_seed_reproducible():
         summary_a["fraud_capture_within_horizon"]
         == summary_b["fraud_capture_within_horizon"]
     )
+
+
+def test_fixed_service_rate_is_independent_of_threshold():
+    df = scored_frame()
+    summary_all, _ = simulate(
+        df,
+        threshold=0.0,
+        capacity_ratio=1.0,
+        discipline="fifo",
+        pooled_service_rate_per_hour=1.2,
+    )
+    summary_strict, _ = simulate(
+        df,
+        threshold=0.5,
+        capacity_ratio=1.0,
+        discipline="fifo",
+        pooled_service_rate_per_hour=1.2,
+    )
+    assert summary_all["pooled_service_rate_per_hour"] == 1.2
+    assert summary_strict["pooled_service_rate_per_hour"] == 1.2
+    assert (
+        summary_all["capacity_mode"]
+        == "fixed_external_service_rate"
+    )
+    assert (
+        summary_strict["capacity_mode"]
+        == "fixed_external_service_rate"
+    )
