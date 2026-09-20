@@ -62,6 +62,7 @@ def simulate(
     discipline: str,
     *,
     service_cv: float = 0.0,
+    team_capacity_cv: float = 0.0,
     seed: int = 0,
     pooled_service_rate_per_hour: float | None = None,
 ) -> tuple[dict, pd.DataFrame]:
@@ -123,12 +124,36 @@ def simulate(
     mean_service_hours = 1.0 / pooled_service_rate
 
     rng = np.random.default_rng(seed)
-    mu, sigma = lognormal_draw_parameters(mean_service_hours, service_cv)
+    service_mu, service_sigma = lognormal_draw_parameters(
+        mean_service_hours,
+        service_cv,
+    )
+    team_mu, team_sigma = lognormal_draw_parameters(
+        1.0,
+        team_capacity_cv,
+    )
+    daily_capacity_multiplier: dict[pd.Timestamp, float] = {}
 
-    def draw_service_hours() -> float:
+    def capacity_multiplier(at_time: pd.Timestamp) -> float:
+        day = at_time.floor("D")
+        if day not in daily_capacity_multiplier:
+            if team_capacity_cv == 0:
+                daily_capacity_multiplier[day] = 1.0
+            else:
+                daily_capacity_multiplier[day] = float(
+                    rng.lognormal(team_mu, team_sigma)
+                )
+        return daily_capacity_multiplier[day]
+
+    def draw_service_hours(at_time: pd.Timestamp) -> tuple[float, float]:
+        team_multiplier = capacity_multiplier(at_time)
         if service_cv == 0:
-            return mean_service_hours
-        return float(rng.lognormal(mu, sigma))
+            base_duration = mean_service_hours
+        else:
+            base_duration = float(
+                rng.lognormal(service_mu, service_sigma)
+            )
+        return base_duration / team_multiplier, team_multiplier
 
     arrivals: list[dict] = []
     for row in alerts.itertuples(index=False):
@@ -166,7 +191,7 @@ def simulate(
 
         item = choose_item(queue, discipline)
         service_start = max(server_available, item["arrival"])
-        service_hours = draw_service_hours()
+        service_hours, team_multiplier = draw_service_hours(service_start)
         service_end = service_start + pd.Timedelta(hours=service_hours)
         waiting_minutes = (service_start - item["arrival"]).total_seconds() / 60.0
 
@@ -176,6 +201,7 @@ def simulate(
                 "service_start": service_start,
                 "service_end": service_end,
                 "service_minutes": service_hours * 60.0,
+                "team_capacity_multiplier": team_multiplier,
                 "waiting_minutes": waiting_minutes,
                 "reviewed_within_horizon": int(service_start <= horizon_end),
                 "backlog_after_start": len(queue),
@@ -210,6 +236,7 @@ def simulate(
         "discipline": discipline,
         "seed": seed,
         "service_cv": service_cv,
+        "team_capacity_cv": team_capacity_cv,
         "threshold": threshold,
         "realized_test_alert_rate": len(alerts) / len(test),
         "alerts": int(len(alerts)),
@@ -271,10 +298,22 @@ def parse_args() -> argparse.Namespace:
         help="Coefficient of variation for lognormal service times. 0 = deterministic.",
     )
     parser.add_argument(
+        "--team-capacity-cv",
+        type=float,
+        default=0.0,
+        help=(
+            "Coefficient of variation for daily pooled-team capacity "
+            "multipliers. 0 = constant team capacity."
+        ),
+    )
+    parser.add_argument(
         "--seeds",
         type=int,
         default=1,
-        help="Number of seeds. Use >1 only when service_cv > 0.",
+        help=(
+            "Number of seeds. Use >1 when service_cv or "
+            "team_capacity_cv is positive."
+        ),
     )
     parser.add_argument("--output-dir", default="outputs/local/queue")
     return parser.parse_args()
@@ -285,6 +324,7 @@ def aggregate_runs(runs: pd.DataFrame) -> pd.DataFrame:
         "discipline",
         "capacity_ratio_to_mean_alert_arrival",
         "service_cv",
+        "team_capacity_cv",
         "threshold",
         "realized_test_alert_rate",
         "alerts",
@@ -320,8 +360,15 @@ def main() -> None:
     args = parse_args()
     if args.seeds < 1:
         raise ValueError("--seeds must be >= 1")
-    if args.service_cv == 0 and args.seeds > 1:
-        print("Warning: deterministic service; repeated seeds will be identical.")
+    if (
+        args.service_cv == 0
+        and args.team_capacity_cv == 0
+        and args.seeds > 1
+    ):
+        print(
+            "Warning: deterministic service and constant team capacity; "
+            "repeated seeds will be identical."
+        )
 
     validation = pd.read_csv(args.validation_scores)
     test = pd.read_csv(args.test_scores)
@@ -348,6 +395,7 @@ def main() -> None:
                     capacity_ratio=capacity_ratio,
                     discipline=discipline,
                     service_cv=args.service_cv,
+                    team_capacity_cv=args.team_capacity_cv,
                     seed=seed,
                 )
                 summary["target_validation_alert_rate"] = args.target_alert_rate
