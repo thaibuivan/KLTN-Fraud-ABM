@@ -8,7 +8,7 @@ Phát triển từ pilot `FinRisk-ABM-Policy-Simulation` thành một **empirica
 - **Primary stateful entity:** `CustomerId`.
 - **Baseline data mode:** chronological observed-event replay.
 - **Simulation clock:** event-driven.
-- **AccountId / SubscriptionId:** nested state/grouping trước.
+- **AccountId / SubscriptionId:** context identifiers/features, not separate agents.
 - **Baseline risk engine candidate:** regularized logistic regression.
 - **Core policy families:** fixed-threshold, capacity-aware, cost-sensitive.
 - **IEEE-CIS:** optional external robustness, not second full ABM.
@@ -18,11 +18,11 @@ Phát triển từ pilot `FinRisk-ABM-Policy-Simulation` thành một **empirica
 
 ### Priority
 1. [[Data Audit]] ✅
-2. Xente local profiling + chronological split.
-3. [[Evidence Parameter Matrix]] — tìm literature cho analyst/cost/queue parameters.
-4. Implement leakage-safe customer features.
-5. Implement persistent queue/backlog.
-6. Fit baseline risk engine.
+2. [[Xente Empirical Profile]] ✅
+3. Leakage-safe customer feature builder ✅
+4. Logistic baseline feasibility screen ✅
+5. [[Evidence Parameter Matrix]] — literature cho analyst/cost/queue parameters.
+6. Implement persistent queue/backlog.
 7. Re-run legacy policy hypotheses.
 8. [[Validation Plan v0.1]] + repeated seeds/sensitivity.
 
@@ -41,9 +41,16 @@ Phát triển từ pilot `FinRisk-ABM-Policy-Simulation` thành một **empirica
 - [[Validation Plan v0.1]]
 
 ## Current blockers
-- Chưa có raw Xente local trong workspace.
 - Analyst capacity/review-time literature chưa chốt.
 - False-positive/friction cost và review-delay mechanism chưa chốt.
+- Persistent queue chưa implement.
+
+## Verified Xente facts
+- 95,662 labelled transactions; 193 fraud.
+- 3,742 CustomerIds; median 7 transactions/customer.
+- 70/15/15 chronological split: 104 / 39 / 50 fraud.
+- Significant cold-start in later periods.
+- AccountId/SubscriptionId are not clean nested customer entities.
 
 ## Next coding target
-`scripts/profile_xente.py` → profile schema, label imbalance, entity repetition, time range, amount distribution and leakage-safe split feasibility without committing raw data.
+Persistent event-driven alert queue + pooled analyst service, then FIFO vs risk-priority comparison.
