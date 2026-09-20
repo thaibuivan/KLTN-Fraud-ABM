@@ -17,6 +17,10 @@ Current:
 - exact analyst speed/cost is not directly identified;
 - queue discipline is a structural assumption.
 
+Next external check:
+- practitioner structural validation;
+- GVHD scope/framing validation.
+
 ### 2. Input / empirical validation
 Verified Xente patterns:
 - fraud prevalence;
@@ -26,30 +30,31 @@ Verified Xente patterns:
 - cold-start share;
 - product/channel/provider distribution.
 
-Risk-model validation now includes:
+Risk-model validation includes:
 - chronological 70/15/15 split;
 - PR-AUC, ROC-AUC, Brier;
 - seen vs unseen-customer performance;
 - expanding-window temporal checks;
-- deliberately weaker/alternate score specifications.
+- weaker/alternate score specifications.
 
 Key finding:
 PR-AUC varies substantially across chronological windows, so one final-test score is not treated as stable production performance.
 
 ### 3. Code verification
-Implemented tests now check:
+Automated queue tests now check:
 - no alert serviced before arrival;
 - FIFO/risk-priority use the same total capacity under equal conditions;
 - risk-priority ordering does not use `FraudResult`;
-- stochastic service is reproducible under the same seed.
+- stochastic service is reproducible under the same seed;
+- fixed pooled service rate remains fixed across threshold changes.
 
 Local verification:
-**4 tests passed.**
+**5 tests passed.**
 
-Still required when cost engine is added:
+Still required if monetary cost engine is added:
 - no double counting of FP/FN/loss;
-- threshold always selected on validation;
-- raw fraud labels never enter queue priority.
+- recovery assumptions isolated from observed labels;
+- cost units clearly marked simulated/external.
 
 ### 4. Stochastic uncertainty
 Implemented:
@@ -69,48 +74,48 @@ Future stochastic components only if justified:
 - fraud-regime perturbation.
 
 ### 5. Parameter sensitivity
-Current:
+Completed:
 - capacity ratio 0.75 / 1.00 / 1.25;
-- score model structure;
-- stochastic service time.
+- risk-model structure;
+- stochastic service time;
+- target alert rate 0.5% / 1% / 2% / 5%.
 
-Next:
-- alert/review rate 0.5% / 1% / 2% / 5%;
-- service-equity/starvation metric;
-- optional wider service-variation range.
+Important design:
+threshold sensitivity holds **absolute pooled service capacity fixed**, anchored to a reference validation alert stream.
 
-Later, if cost engine enters core:
-- FP/customer-friction cost;
-- recovery/prevention rate.
+This prevents a sensitive policy from receiving artificial extra capacity.
 
 ### 6. Structural sensitivity
 Completed:
-- FIFO vs risk-priority queue;
+- FIFO vs risk-priority;
 - full logistic vs no-current-value vs amount-only score model.
 
-Planned:
-- pooled constant mean capacity vs variable team capacity;
-- optional shifted fraud regime.
+Possible later:
+- constant vs variable team capacity;
+- risk-priority vs aging/hybrid priority;
+- shifted fraud regime.
 
 ## Current robustness finding
-[[Xente Robustness Pack v0.1]] shows:
-- risk-priority generally increases fraud review within the finite observation horizon under congestion;
-- the qualitative result survives stochastic service times;
-- it also survives a materially weaker score model;
-- but risk-priority worsens tail waiting time for lower-priority alerts.
+[[Xente Robustness Pack v0.1]] and [[Xente Alert-rate and Starvation Sensitivity v0.1]] show:
+- risk-priority generally increases fraud service under congestion;
+- effect persists under stochastic service times;
+- effect persists with a materially weaker score model;
+- threshold-induced alert growth can create severe backlog under fixed staffing;
+- risk-priority can create severe low-priority tail waiting/starvation.
 
-This is stronger than the first pilot but remains conditional on the Xente environment and tested structures.
+This remains conditional on the Xente environment and tested structures.
 
 ## Claim discipline
 Do not conclude:
 - risk-priority is universally best;
-- observed queue wait is real-bank waiting time;
+- simulated waiting hours are real-bank SLAs;
 - Xente classifier performance transfers to a bank;
 - capacity ratios are empirical staffing levels;
+- low-priority starvation is operationally acceptable;
 - monetary value is identified before cost parameters are grounded.
 
 Allowed claim form:
-> Under the Xente event/score streams and evaluated capacity/model structures, queue discipline changes how scarce review capacity is allocated and therefore changes the trade-off between fraud capture and waiting-time distribution.
+> Under the Xente event/score streams and evaluated capacity/model structures, alert thresholds and queue disciplines change how scarce review capacity is allocated, generating trade-offs among fraud capture, backlog and waiting-time distribution.
 
 ## Not required initially
 - full History Matching + ABC;
@@ -120,13 +125,14 @@ Allowed claim form:
 
 ## TODO
 - [x] Chốt primary dataset.
-- [x] FIFO vs risk-priority structural test.
+- [x] FIFO vs risk-priority.
 - [x] Persistent queue.
-- [x] Seen vs cold-start evaluation.
+- [x] Seen vs cold-start.
 - [x] Expanding-window temporal robustness.
 - [x] Weak/alternate score-model sensitivity.
 - [x] Stochastic service time + multiple seeds.
-- [ ] Threshold/alert-rate sensitivity.
-- [ ] Starvation/service-equity metrics.
-- [ ] Variable team-capacity structure.
+- [x] Threshold/alert-rate sensitivity with fixed staffing.
+- [x] Starvation/service-equity diagnostics.
 - [ ] Practitioner structural validation.
+- [ ] Decide aging/expiry/hybrid mechanism.
+- [ ] Freeze final experiment grid.
