@@ -1,9 +1,9 @@
 # Xente Baseline Implementation Plan v0.1
 
 ## Goal
-Biến quyết định dataset thành một baseline có thể chạy được, nhưng **không migrate mù quáng code từ repo cũ**.
+Biến Xente thành một empirical baseline có thể chạy được, nhưng **không migrate mù quáng code từ repo cũ**.
 
-## Stage A — Local profile
+## Stage A — Local profile ✅
 Input:
 `data/raw/xente/training.csv`
 
@@ -12,109 +12,139 @@ Run:
 python scripts/profile_xente.py --input data/raw/xente/training.csv
 ```
 
-Outputs (ignored by Git):
-- `outputs/local/xente_profile.json`
-- `outputs/local/xente_profile.md`
+Verified:
+- 95,662 labelled transactions;
+- 193 fraud;
+- 3,742 CustomerIds;
+- significant entity repetition and later cold-start.
 
-Use profile to check:
-- fraud count/rate;
-- time range;
-- repeated customers/accounts;
-- amount distribution;
-- missingness;
-- fraud counts under candidate chronological splits.
+## Stage B — Leakage-safe feature table ✅
+Run:
+```bash
+python scripts/build_xente_features.py \
+  --input data/raw/xente/training.csv \
+  --output data/interim/xente_features.csv
+```
 
-## Stage B — Leakage-safe feature table
-Build chronological features using only prior information for each transaction.
+Current past-only customer features include:
+- prior transaction count;
+- prior Value mean/std;
+- gap since previous transaction;
+- rolling 1h/24h/7d counts;
+- current Value relative to prior customer mean;
+- prior product/category share;
+- prior channel share.
 
-Initial features:
-- hour / weekday;
-- customer transaction count in rolling windows;
-- rolling amount mean/median/sum;
-- gap from previous transaction;
-- current amount relative to customer history;
-- product/category/channel frequencies from past data only;
-- account/subscription activity counts.
+Important:
+- no future label statistics;
+- no raw CustomerId as a predictor;
+- AccountId/SubscriptionId are not treated as clean nested agents.
 
-Do not use future label statistics or whole-dataset target encoding.
+## Stage C — Risk engine baseline ✅
+Run:
+```bash
+python scripts/train_xente_baseline.py \
+  --input data/interim/xente_features.csv \
+  --output-dir outputs/local/xente_baseline
+```
 
-## Stage C — Risk engine baseline
-Start with regularized logistic regression.
+Baseline:
+- regularized logistic regression;
+- chronological 70/15/15;
+- validation/test score files saved for policy replay.
 
-Why:
-- interpretable;
-- small fraud-positive count;
-- easy probability output;
-- helps keep thesis focus on policy rather than classifier competition.
+## Stage D — Persistent queue / policy replay ✅
+Run deterministic:
+```bash
+python scripts/simulate_alert_queue.py \
+  --validation-scores outputs/local/xente_baseline/validation_scores.csv \
+  --test-scores outputs/local/xente_baseline/test_scores.csv \
+  --target-alert-rate 0.01 \
+  --capacity-ratios 0.75,1.0,1.25 \
+  --service-cv 0 \
+  --seeds 1
+```
 
-Evaluation:
-- PR-AUC;
-- ROC-AUC as secondary;
-- recall at selected alert/review rates;
-- calibration curve/Brier score if feasible;
-- chronological holdout only.
+Run stochastic:
+```bash
+python scripts/simulate_alert_queue.py \
+  --validation-scores outputs/local/xente_baseline/validation_scores.csv \
+  --test-scores outputs/local/xente_baseline/test_scores.csv \
+  --target-alert-rate 0.01 \
+  --capacity-ratios 0.75,1.0,1.25 \
+  --service-cv 0.5 \
+  --seeds 100
+```
 
-Optional robustness:
-- XGBoost/LightGBM after baseline is stable.
+Queue:
+- persistent backlog;
+- FIFO vs risk-priority;
+- seen/unseen fraud capture;
+- waiting-time distribution;
+- relative pooled capacity.
 
-## Stage D — Observed-event policy replay
-Process holdout transactions by `TransactionStartTime`.
+## Stage E — Risk-model robustness ✅
+Run:
+```bash
+python scripts/run_xente_model_robustness.py \
+  --input data/interim/xente_features.csv
+```
 
-Each event:
-1. update/read customer history using past-only state;
-2. score transaction;
-3. apply policy;
-4. if alert, insert into persistent queue;
-5. analyst service completes alerts according to capacity/service-time assumptions;
-6. compute outcome using observed `FraudResult` plus explicit prevention/recovery assumptions.
+Models:
+- full logistic;
+- no current Value signal;
+- amount-only baseline.
 
-## Stage E — Persistent queue
-Minimum queue state:
-- alert id;
-- transaction id;
-- arrival time;
-- priority;
-- service start;
-- service end;
-- waiting time;
-- queue length at arrival.
+Purpose:
+test whether policy conclusions depend on an unusually easy Xente score model.
 
-Baseline disciplines:
-1. FIFO;
-2. risk-priority.
+## Stage F — Temporal robustness ✅
+Run:
+```bash
+python scripts/run_xente_temporal_robustness.py \
+  --input data/interim/xente_features.csv
+```
 
-Cost-sensitive priority comes after cost assumptions are grounded.
+Expanding-window diagnostic:
+- train 50% → evaluate next 10%;
+- ...
+- train 90% → evaluate final 10%.
 
-## Stage F — Re-test legacy hypotheses
-Re-test, do not copy:
-- lower threshold increases recall but workload/FP;
-- low capacity changes policy ranking;
-- capacity-aware priority helps under congestion;
-- cost assumptions can change preferred policy.
+## Stage G — Verification ✅
+Run:
+```bash
+pytest -q
+```
 
-## Stage G — Uncertainty
-Only after baseline works:
-- repeated seeds for stochastic service-time/review components;
-- analyst capacity range;
-- review-time range;
-- cost range;
-- fraud-pressure stress scenarios;
-- queue discipline structural sensitivity.
+Current:
+**4 queue verification tests passed.**
 
-## Definition of done for MVP
-MVP is complete when:
-- [ ] raw Xente remains outside Git;
-- [ ] chronological feature pipeline passes leakage checks;
-- [ ] baseline risk model produces scores on holdout;
-- [ ] persistent queue carries backlog over time;
-- [ ] at least two policies run on exactly the same event stream;
-- [ ] output includes fraud loss proxy, FP, alerts, backlog, waiting time and workload;
-- [ ] one policy comparison is reproduced over multiple seeds/parameter values.
+## Stage H — Next sensitivity
+Next implement:
+1. alert-rate sensitivity 0.5% / 1% / 2% / 5%;
+2. starvation/service-equity metrics;
+3. variable team capacity;
+4. practitioner structural validation.
+
+Cost-sensitive monetary analysis comes **after** stronger cost/recovery grounding.
+
+## Definition of done for core MVP
+
+- [x] raw Xente remains outside Git;
+- [x] chronological feature pipeline is past-only;
+- [x] baseline risk model produces holdout scores;
+- [x] persistent queue carries backlog over time;
+- [x] FIFO and risk-priority run on the same event stream;
+- [x] outputs include alerts, FP, backlog, waiting time and workload;
+- [x] comparison reproduced across multiple seeds;
+- [x] weaker score-model sensitivity implemented;
+- [ ] threshold/alert-rate sensitivity completed;
+- [ ] practitioner workflow validation completed or explicitly documented as unavailable.
 
 ## What NOT to build yet
 - LLM analyst;
 - adaptive fraudster cognition;
-- full Mesa multi-agent UI;
+- full Mesa UI;
 - dashboard;
 - complex game-theoretic equilibrium;
 - second full dataset implementation.
