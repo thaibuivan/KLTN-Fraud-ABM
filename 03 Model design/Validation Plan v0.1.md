@@ -11,14 +11,14 @@ Với mỗi agent/state/rule:
 - evidence từ đâu?
 - assumption nào phải ghi rõ?
 
-Current focus:
+Current:
 - customer state is justified by Xente repetition/history;
 - analyst capacity mechanism is literature-supported;
 - exact analyst speed/cost is not directly identified;
 - queue discipline is a structural assumption.
 
 ### 2. Input / empirical validation
-Current verified Xente patterns:
+Verified Xente patterns:
 - fraud prevalence;
 - Value/Amount distribution;
 - transaction timing;
@@ -26,68 +26,91 @@ Current verified Xente patterns:
 - cold-start share;
 - product/channel/provider distribution.
 
-Risk-model validation:
-- chronological split only;
-- report PR-AUC, calibration/Brier, operating points;
-- report seen vs unseen-customer performance later;
-- add temporal/rolling robustness.
+Risk-model validation now includes:
+- chronological 70/15/15 split;
+- PR-AUC, ROC-AUC, Brier;
+- seen vs unseen-customer performance;
+- expanding-window temporal checks;
+- deliberately weaker/alternate score specifications.
+
+Key finding:
+PR-AUC varies substantially across chronological windows, so one final-test score is not treated as stable production performance.
 
 ### 3. Code verification
-Mandatory checks:
+Implemented tests now check:
 - no alert serviced before arrival;
-- threshold selected on validation, never test;
-- fraud label never used for priority;
-- queue does not reset at day boundary;
-- backlog carry-over is correct;
-- service capacity is not exceeded;
-- FIFO/risk-priority use identical alert stream/capacity;
-- cost calculations do not double-count when cost engine is added.
+- FIFO/risk-priority use the same total capacity under equal conditions;
+- risk-priority ordering does not use `FraudResult`;
+- stochastic service is reproducible under the same seed.
+
+Local verification:
+**4 tests passed.**
+
+Still required when cost engine is added:
+- no double counting of FP/FN/loss;
+- threshold always selected on validation;
+- raw fraud labels never enter queue priority.
 
 ### 4. Stochastic uncertainty
-Current queue v0.1 is deterministic conditional on scores/capacity.
+Implemented:
+- lognormal service-time variation;
+- coefficient of variation parameter;
+- repeated random seeds;
+- mean + 5th/95th percentile reporting.
 
-Stochasticity will enter only when adding:
-- variable analyst/service capacity;
-- stochastic review time;
-- optional analyst error;
+Current pilot:
+- service CV = 0.5;
+- 100 seeds;
+- CV is an explicit stress assumption, not empirical review-time calibration.
+
+Future stochastic components only if justified:
+- variable team capacity;
+- analyst decision error;
 - fraud-regime perturbation.
 
-Then:
-- run multiple seeds;
-- report mean/CI/distribution;
-- choose number of replications after convergence/stability check.
-
 ### 5. Parameter sensitivity
-Prioritize high-uncertainty parameters:
-- capacity ratio;
-- review-time/service-rate distribution;
+Current:
+- capacity ratio 0.75 / 1.00 / 1.25;
+- score model structure;
+- stochastic service time.
+
+Next:
+- alert/review rate 0.5% / 1% / 2% / 5%;
+- service-equity/starvation metric;
+- optional wider service-variation range.
+
+Later, if cost engine enters core:
 - FP/customer-friction cost;
-- recovery/prevention rate if introduced;
-- threshold/alert rate.
+- recovery/prevention rate.
 
 ### 6. Structural sensitivity
-Current first structural test:
-- **FIFO vs risk-priority queue**.
+Completed:
+- FIFO vs risk-priority queue;
+- full logistic vs no-current-value vs amount-only score model.
 
-Later candidates:
-- pooled vs heterogeneous analyst capacity;
-- logistic vs stronger/degraded risk-score model;
-- static vs shifted fraud regime.
+Planned:
+- pooled constant mean capacity vs variable team capacity;
+- optional shifted fraud regime.
 
-## Current pilot finding
-[[Xente Queue Pilot v0.1]] shows queue discipline changes fraud capture under identical score/capacity conditions, while risk-priority worsens tail waiting time for lower-priority alerts.
+## Current robustness finding
+[[Xente Robustness Pack v0.1]] shows:
+- risk-priority generally increases fraud review within the finite observation horizon under congestion;
+- the qualitative result survives stochastic service times;
+- it also survives a materially weaker score model;
+- but risk-priority worsens tail waiting time for lower-priority alerts.
 
-This is a structural result that must be tested for robustness before becoming a thesis conclusion.
+This is stronger than the first pilot but remains conditional on the Xente environment and tested structures.
 
 ## Claim discipline
 Do not conclude:
 - risk-priority is universally best;
 - observed queue wait is real-bank waiting time;
 - Xente classifier performance transfers to a bank;
-- capacity ratios are empirical cases/day.
+- capacity ratios are empirical staffing levels;
+- monetary value is identified before cost parameters are grounded.
 
 Allowed claim form:
-> Under the Xente score stream and evaluated capacity scenarios, queue discipline changes the allocation of scarce review capacity and therefore the trade-off between fraud capture and waiting-time distribution.
+> Under the Xente event/score streams and evaluated capacity/model structures, queue discipline changes how scarce review capacity is allocated and therefore changes the trade-off between fraud capture and waiting-time distribution.
 
 ## Not required initially
 - full History Matching + ABC;
@@ -97,9 +120,13 @@ Allowed claim form:
 
 ## TODO
 - [x] Chốt primary dataset.
-- [x] Chọn first structural alternative: FIFO vs risk-priority.
-- [x] Implement first persistent queue pilot.
-- [ ] Seen vs cold-start evaluation.
-- [ ] Bootstrap/rolling temporal robustness.
-- [ ] Add variable capacity/service-time and multiple seeds.
-- [ ] Decide whether cost-sensitive priority is thesis-core or secondary sensitivity.
+- [x] FIFO vs risk-priority structural test.
+- [x] Persistent queue.
+- [x] Seen vs cold-start evaluation.
+- [x] Expanding-window temporal robustness.
+- [x] Weak/alternate score-model sensitivity.
+- [x] Stochastic service time + multiple seeds.
+- [ ] Threshold/alert-rate sensitivity.
+- [ ] Starvation/service-equity metrics.
+- [ ] Variable team-capacity structure.
+- [ ] Practitioner structural validation.
