@@ -35,6 +35,9 @@ Phát triển từ pilot `FinRisk-ABM-Policy-Simulation` thành một **empirica
 14. Queue verification tests: **5 passed** ✅
 15. Practitioner validation question guide drafted ✅
 16. GVHD milestone update drafted ✅
+17. [[Xente Variable Team Capacity Sensitivity v0.1]] ✅
+18. [[Core Experiment Grid v0.1]] drafted ✅
+19. [[Candidate Core Specification v0.3]] drafted ✅
 
 ## Literature
 - [[AML-CFSim 2025]]
@@ -51,12 +54,15 @@ Phát triển từ pilot `FinRisk-ABM-Policy-Simulation` thành một **empirica
 - [[Operational Parameter Grounding v0.1]]
 - [[Queue and Analyst Service Design v0.1]]
 - [[Validation Plan v0.1]]
+- [[Core Experiment Grid v0.1]]
+- [[Candidate Core Specification v0.3]]
 
 ## Experiments
 - [[Xente Baseline Risk Model Feasibility]]
 - [[Xente Queue Pilot v0.1]]
 - [[Xente Robustness Pack v0.1]]
 - [[Xente Alert-rate and Starvation Sensitivity v0.1]]
+- [[Xente Variable Team Capacity Sensitivity v0.1]]
 
 ## Current robust insight
 Across tested Xente score streams:
@@ -66,7 +72,8 @@ Across tested Xente score streams:
 - fraud capture within a finite horizon generally increases relative to FIFO;
 - tail waiting/starvation for lower-priority alerts worsens;
 - the qualitative result persists after removing current-Value features;
-- the result persists under stochastic service times.
+- the result persists under stochastic service times;
+- the result also persists under day-level variable team capacity.
 
 This is a **conditional simulation result**, not a universal policy recommendation.
 
@@ -90,12 +97,10 @@ Therefore:
 ## Next priorities
 1. Conduct practitioner structural validation using [[Practitioner Validation Questions v0.1]].
 2. Ask GVHD the five decisions in [[GVHD Update - Xente Queue Milestone]].
-3. Based on feedback, decide whether to add:
-   - hybrid aging priority;
-   - variable team capacity;
-   - cost-sensitive monetary layer.
-4. Freeze core mechanisms and final experiment grid.
-5. Then write Methodology from the frozen implementation.
+3. Review [[Candidate Core Specification v0.3]] and [[Core Experiment Grid v0.1]] with GVHD.
+4. Based on feedback, decide whether to add hybrid aging/expiry or a cost-sensitive monetary layer.
+5. Freeze core mechanisms and final experiment grid.
+6. Then write Methodology from the frozen implementation.
 
 ## Rule
 Không làm LLM, fraudster cognition hoặc dashboard trước khi core mechanism được freeze.
