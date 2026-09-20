@@ -1,0 +1,36 @@
+# Obsidian local state
+.obsidian/
+.trash/
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Office temp
+~$*.docx
+~$*.xlsx
+~$*.pptx
+
+# Large/raw/restricted data
+data/raw/
+data/interim/
+
+# Local profiling outputs
+outputs/local/
+
+# Model artifacts
+models/
