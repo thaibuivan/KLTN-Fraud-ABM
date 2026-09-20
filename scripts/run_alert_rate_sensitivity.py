@@ -1,7 +1,10 @@
 """Run queue sensitivity across validation-selected target alert rates.
 
-The score threshold is selected independently on the validation set for each
-target alert rate, then frozen and replayed on the same test event stream.
+Unlike the standard capacity stress test, this experiment holds absolute pooled
+service capacity fixed across thresholds. Capacity is anchored to a reference
+validation alert stream (default: 1% target alert rate) and then replayed on
+all test thresholds. This prevents analyst capacity from increasing simply
+because a more sensitive threshold generates more alerts.
 """
 
 from __future__ import annotations
@@ -11,16 +14,30 @@ from pathlib import Path
 
 import pandas as pd
 
-from simulate_alert_queue import simulate, threshold_for_target_rate
+from simulate_alert_queue import (
+    simulate,
+    threshold_for_target_rate,
+)
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--validation-scores", required=True)
-    parser.add_argument("--test-scores", required=True)
+    parser.add_argument(
+        "--validation-scores",
+        required=True,
+    )
+    parser.add_argument(
+        "--test-scores",
+        required=True,
+    )
     parser.add_argument(
         "--alert-rates",
         default="0.005,0.01,0.02,0.05",
+    )
+    parser.add_argument(
+        "--reference-alert-rate",
+        type=float,
+        default=0.01,
     )
     parser.add_argument(
         "--capacity-ratios",
@@ -38,15 +55,44 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--output-dir",
-        default="outputs/local/alert_rate_sensitivity",
+        default=(
+            "outputs/local/"
+            "alert_rate_sensitivity"
+        ),
     )
     return parser.parse_args()
+
+
+def alert_arrival_rate_per_hour(
+    frame: pd.DataFrame,
+    threshold: float,
+) -> float:
+    start = frame[
+        "TransactionStartTime"
+    ].min()
+    end = frame[
+        "TransactionStartTime"
+    ].max()
+    hours = max(
+        (end - start).total_seconds()
+        / 3600.0,
+        1e-9,
+    )
+    alerts = int(
+        (
+            frame["risk_probability"]
+            >= threshold
+        ).sum()
+    )
+    return alerts / hours
 
 
 def main() -> None:
     args = parse_args()
     if args.seeds < 1:
-        raise ValueError("--seeds must be >= 1")
+        raise ValueError(
+            "--seeds must be >= 1"
+        )
 
     validation = pd.read_csv(
         args.validation_scores
@@ -54,61 +100,122 @@ def main() -> None:
     test = pd.read_csv(
         args.test_scores
     )
-    validation["TransactionStartTime"] = pd.to_datetime(
-        validation["TransactionStartTime"],
+    validation[
+        "TransactionStartTime"
+    ] = pd.to_datetime(
+        validation[
+            "TransactionStartTime"
+        ],
         utc=True,
     )
-    test["TransactionStartTime"] = pd.to_datetime(
+    test[
+        "TransactionStartTime"
+    ] = pd.to_datetime(
         test["TransactionStartTime"],
         utc=True,
     )
 
     alert_rates = [
         float(v)
-        for v in args.alert_rates.split(",")
+        for v
+        in args.alert_rates.split(",")
     ]
     capacity_ratios = [
         float(v)
-        for v in args.capacity_ratios.split(",")
+        for v
+        in args.capacity_ratios.split(",")
     ]
+
+    reference_threshold = (
+        threshold_for_target_rate(
+            validation,
+            args.reference_alert_rate,
+        )
+    )
+    reference_arrival_rate = (
+        alert_arrival_rate_per_hour(
+            validation,
+            reference_threshold,
+        )
+    )
 
     rows: list[dict] = []
     for target_rate in alert_rates:
-        threshold = threshold_for_target_rate(
-            validation,
-            target_rate,
+        threshold = (
+            threshold_for_target_rate(
+                validation,
+                target_rate,
+            )
         )
-        for capacity_ratio in capacity_ratios:
+
+        for requested_capacity_ratio in (
+            capacity_ratios
+        ):
+            fixed_service_rate = (
+                reference_arrival_rate
+                * requested_capacity_ratio
+            )
+
             for discipline in (
                 "fifo",
                 "risk_priority",
             ):
-                for seed in range(args.seeds):
+                for seed in range(
+                    args.seeds
+                ):
                     summary, _ = simulate(
                         test=test,
                         threshold=threshold,
-                        capacity_ratio=capacity_ratio,
+                        capacity_ratio=(
+                            requested_capacity_ratio
+                        ),
                         discipline=discipline,
-                        service_cv=args.service_cv,
+                        service_cv=(
+                            args.service_cv
+                        ),
                         seed=seed,
+                        pooled_service_rate_per_hour=(
+                            fixed_service_rate
+                        ),
                     )
                     summary[
                         "target_validation_alert_rate"
                     ] = target_rate
+                    summary[
+                        "reference_validation_alert_rate"
+                    ] = (
+                        args.reference_alert_rate
+                    )
+                    summary[
+                        (
+                            "reference_validation_"
+                            "alert_arrival_rate_"
+                            "per_hour"
+                        )
+                    ] = (
+                        reference_arrival_rate
+                    )
                     rows.append(summary)
 
     runs = pd.DataFrame(rows)
 
     group_cols = [
         "target_validation_alert_rate",
+        "reference_validation_alert_rate",
+        "requested_capacity_ratio",
         "discipline",
-        "capacity_ratio_to_mean_alert_arrival",
         "service_cv",
         "threshold",
         "realized_test_alert_rate",
         "alerts",
         "fraud_alerts",
+        "pooled_service_rate_per_hour",
+        (
+            "capacity_ratio_to_"
+            "mean_alert_arrival"
+        ),
     ]
+
     metric_cols = [
         "reviewed_within_horizon",
         "backlog_end",
@@ -147,14 +254,18 @@ def main() -> None:
             row[
                 f"{metric}_p05"
             ] = (
-                float(values.quantile(0.05))
+                float(
+                    values.quantile(0.05)
+                )
                 if len(values)
                 else None
             )
             row[
                 f"{metric}_p95"
             ] = (
-                float(values.quantile(0.95))
+                float(
+                    values.quantile(0.95)
+                )
                 if len(values)
                 else None
             )
@@ -171,17 +282,20 @@ def main() -> None:
         parents=True,
         exist_ok=True,
     )
-
     runs.to_csv(
-        output_dir / "alert_rate_runs.csv",
+        output_dir
+        / "alert_rate_runs.csv",
         index=False,
     )
     summary.to_csv(
-        output_dir / "alert_rate_summary.csv",
+        output_dir
+        / "alert_rate_summary.csv",
         index=False,
     )
 
-    print(summary.to_string(index=False))
+    print(
+        summary.to_string(index=False)
+    )
 
 
 if __name__ == "__main__":
