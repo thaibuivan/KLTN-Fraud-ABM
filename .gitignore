@@ -25,7 +25,12 @@ Thumbs.db
 ~$*.xlsx
 ~$*.pptx
 
-# Large/raw data should be managed outside Git unless explicitly intended
+# Large/raw/restricted data
 data/raw/
 data/interim/
+
+# Local profiling outputs
+outputs/local/
+
+# Model artifacts
 models/
