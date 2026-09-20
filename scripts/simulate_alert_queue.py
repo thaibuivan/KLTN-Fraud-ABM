@@ -182,6 +182,11 @@ def simulate(
         (within & fraud & reviewed["seen_in_train_customer"].eq(0)).sum()
     )
 
+    score_q25 = float(reviewed["risk_probability"].quantile(0.25))
+    score_q75 = float(reviewed["risk_probability"].quantile(0.75))
+    low_priority = reviewed["risk_probability"] <= score_q25
+    high_priority = reviewed["risk_probability"] >= score_q75
+
     summary = {
         "discipline": discipline,
         "seed": seed,
@@ -199,6 +204,22 @@ def simulate(
         "mean_wait_minutes": float(reviewed["waiting_minutes"].mean()),
         "p95_wait_minutes": float(reviewed["waiting_minutes"].quantile(0.95)),
         "max_wait_minutes": float(reviewed["waiting_minutes"].max()),
+        "p99_wait_minutes": float(reviewed["waiting_minutes"].quantile(0.99)),
+        "share_wait_over_24h": float(
+            (reviewed["waiting_minutes"] > 24 * 60).mean()
+        ),
+        "share_wait_over_48h": float(
+            (reviewed["waiting_minutes"] > 48 * 60).mean()
+        ),
+        "share_wait_over_72h": float(
+            (reviewed["waiting_minutes"] > 72 * 60).mean()
+        ),
+        "low_priority_p95_wait_minutes": float(
+            reviewed.loc[low_priority, "waiting_minutes"].quantile(0.95)
+        ),
+        "high_priority_p95_wait_minutes": float(
+            reviewed.loc[high_priority, "waiting_minutes"].quantile(0.95)
+        ),
         "fraud_reviewed_within_horizon": int((within & fraud).sum()),
         "fraud_capture_within_horizon": (
             float((within & fraud).sum() / all_test_fraud) if all_test_fraud else None
@@ -254,6 +275,12 @@ def aggregate_runs(runs: pd.DataFrame) -> pd.DataFrame:
             "backlog_end",
             "mean_wait_minutes",
             "p95_wait_minutes",
+            "p99_wait_minutes",
+            "share_wait_over_24h",
+            "share_wait_over_48h",
+            "share_wait_over_72h",
+            "low_priority_p95_wait_minutes",
+            "high_priority_p95_wait_minutes",
             "fraud_capture_within_horizon",
             "seen_fraud_capture_within_horizon",
             "unseen_fraud_capture_within_horizon",
