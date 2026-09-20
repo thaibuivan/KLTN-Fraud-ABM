@@ -43,6 +43,37 @@ Các bản mô tả dataset công khai cho thấy training schema gồm:
 
 Một phân tích công bố trên bộ training báo cáo 95,662 rows, 193 fraud cases (~0.20%). **Con số này phải được verify lại bằng local profiling sau khi tải dữ liệu**, vì Zindi page không công bố trực tiếp fraud count.
 
+### Local verification from uploaded competition package
+
+Verified directly from the uploaded official package:
+- training rows: **95,662**
+- test rows: **45,019**
+- training fraud cases: **193**
+- training fraud rate: **0.2018%**
+- labelled time range: **2018-11-15 02:18:49 UTC → 2019-02-13 10:01:28 UTC**
+- training missing values: **0**
+- unique CustomerId: **3,742**
+- unique AccountId: **3,633**
+- unique SubscriptionId: **3,627**
+
+Important entity finding:
+- CustomerId has strong repetition: median **7** transactions/customer, P95 **98**, and ~**81.0%** of customers have >=2 transactions.
+- AccountId is **not** a clean one-account-per-customer hierarchy: some AccountIds are shared by many CustomerIds; one observed AccountId maps to as many as **2,577 CustomerIds**.
+- Therefore, **CustomerId remains the stateful entity**, while AccountId/SubscriptionId should initially be treated as transaction-context identifiers rather than nested independent agents.
+
+Important temporal finding:
+- A chronological 70/15/15 split gives **104 / 39 / 50 fraud cases** in train/validation/test.
+- Relative to the first 70% training period, ~**21.8%** of validation transactions and ~**37.1%** of test transactions belong to previously unseen customers.
+- **30/39** validation frauds and **41/50** test frauds occur on customers unseen during training.
+
+Important signal finding:
+- fraud median Value is about **650,000**, versus legitimate median Value of **1,000**;
+- fraud is heavily concentrated in financial_services and selected product/provider/channel contexts.
+
+These facts make Xente suitable for a stateful baseline, but they also imply substantial cold-start and dataset-specific signal concentration.
+
+See [[Xente Empirical Profile]].
+
 ### Strengths for this thesis
 1. **True customer/account identifiers**
    - phù hợp để build rolling history theo customer/account;
@@ -176,21 +207,12 @@ Do **not** make IEEE-CIS a second full ABM unless necessary; that would add larg
 ### Proposed primary stateful entity
 **Customer agent/state = `CustomerId`**
 
-Candidate nested/account states:
-- `AccountId`
-- `SubscriptionId`
+Local profiling shows that `AccountId` and `SubscriptionId` are not safe to interpret as clean nested entities under a customer. Some identifiers are shared across many CustomerIds.
 
-Initial thesis implementation should avoid making Customer, Account and Subscription three independent agents unless interactions among them are required by an RQ.
-
-Recommended hierarchy:
-
-```text
-Customer state
-  ├── one or more AccountId
-  └── one or more SubscriptionId
-```
-
-Use customer as the persistent entity; account/subscription are attributes/grouping levels first.
+Therefore:
+- use `CustomerId` as the persistent stateful entity;
+- treat `AccountId` and `SubscriptionId` as transaction-context identifiers/features initially;
+- do not create separate Account/Subscription agents unless a later mechanism is empirically justified.
 
 ---
 
@@ -199,8 +221,8 @@ Use customer as the persistent entity; account/subscription are attributes/group
 | Dataset evidence | Model state / parameter | Estimation |
 |---|---|---|
 | `CustomerId` | Customer identity/state | Direct |
-| `AccountId` | Account grouping | Direct |
-| `SubscriptionId` | Subscription grouping | Direct |
+| `AccountId` | Transaction context identifier | Direct, but mapping is many-to-many-like in observed data |
+| `SubscriptionId` | Transaction context identifier | Direct, but do not assume clean nested ownership |
 | `TransactionStartTime` | Arrival time / temporal ordering | Direct |
 | `Amount`, `Value` | Transaction amount distribution / potential loss proxy | Empirical distribution |
 | `ProductCategory` | Product/category heterogeneity | Empirical frequencies |
@@ -242,9 +264,12 @@ Recommended:
 4. construct rolling features using **past transactions only**;
 5. never use future information to build customer history.
 
-Exact cut points should be chosen after local profiling to preserve enough fraud events in train/validation/test.
+Local profiling supports **70/15/15 chronological split as the first baseline**:
+- train: 66,963 rows / 104 fraud;
+- validation: 14,349 rows / 39 fraud;
+- test: 14,350 rows / 50 fraud.
 
-Because fraud positives are sparse, cut points must be checked against event counts rather than fixed blindly at 70/15/15.
+Because fraud positives are sparse, final reporting should add bootstrap confidence intervals and/or rolling-origin robustness rather than rely on a single point estimate. Cold-start results should also be reported separately for seen vs unseen customers.
 
 ---
 
@@ -310,10 +335,11 @@ Rationale:
 > Xente sacrifices sample size and number of fraud positives, but its explicit customer/account identifiers and actual transaction timestamp provide a substantially cleaner empirical basis for a stateful dynamic policy simulation/ABM. IEEE-CIS is stronger as a classifier benchmark, but weaker for this thesis's core need: interpretable persistent entities and transaction histories.
 
 ## Immediate next steps
-- [ ] Download Xente data locally after accepting Zindi terms.
-- [ ] Run local schema + label + entity + temporal profiling.
-- [ ] Choose chronological split based on fraud counts.
-- [ ] Build leakage-safe rolling customer features.
-- [ ] Fit a simple baseline risk engine.
+- [x] Obtain and verify Xente competition package.
+- [x] Run schema + label + entity + temporal profiling.
+- [x] Select 70/15/15 chronological baseline split.
+- [x] Build/test leakage-safe rolling customer feature script.
+- [x] Run a logistic-regression feasibility baseline.
 - [ ] Implement persistent alert queue.
+- [ ] Ground analyst service/capacity/review-time assumptions.
 - [ ] Re-run legacy policy ideas on the new empirical baseline.
