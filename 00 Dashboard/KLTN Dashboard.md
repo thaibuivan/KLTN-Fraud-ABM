@@ -9,48 +9,60 @@ Phát triển từ pilot `FinRisk-ABM-Policy-Simulation` thành một **empirica
 - **Baseline data mode:** chronological observed-event replay.
 - **Simulation clock:** event-driven.
 - **AccountId / SubscriptionId:** context identifiers/features, not separate agents.
-- **Baseline risk engine candidate:** regularized logistic regression.
-- **Core policy families:** fixed-threshold, capacity-aware, cost-sensitive.
+- **Baseline risk engine:** regularized logistic regression first.
+- **Core operational mechanism:** persistent alert queue.
+- **First structural comparison:** FIFO vs risk-priority.
+- **Capacity representation:** relative pooled capacity ratio, not invented cases/day.
 - **IEEE-CIS:** optional external robustness, not second full ABM.
 
 ## Current milestone
-**Empirical baseline setup + operational-parameter grounding.**
+**Queue/policy robustness after empirical baseline.**
 
-### Priority
+### Completed
 1. [[Data Audit]] ✅
 2. [[Xente Empirical Profile]] ✅
-3. Leakage-safe customer feature builder ✅
-4. Logistic baseline feasibility screen ✅
-5. [[Evidence Parameter Matrix]] — literature cho analyst/cost/queue parameters.
-6. Implement persistent queue/backlog.
-7. Re-run legacy policy hypotheses.
-8. [[Validation Plan v0.1]] + repeated seeds/sensitivity.
+3. Leakage-safe customer features ✅
+4. Logistic baseline feasibility ✅
+5. Literature grounding for analyst/capacity/cost ✅
+6. Persistent queue simulator ✅
+7. [[Xente Queue Pilot v0.1]] ✅
 
-## Legacy project
-- [[Legacy Project Audit - FinRisk]]
-- [[Legacy Migration Map]]
-- [[Prototype-to-Thesis Gap]]
-
-> Repo cũ là pilot/legacy. Không copy nguyên assumptions hoặc kết quả sang KLTN; kết luận chính phải được re-test trong design mới.
+## Literature
+- [[AML-CFSim 2025]]
+- [[McCulloch 2022]]
+- [[Alves et al 2025 - OpenL2D FiFAR]]
+- [[Hoppner et al 2022 - Cost-sensitive transfer fraud]]
+- [[Real bank AML alert scoring 2025]]
 
 ## Design
 - [[Research Design v0.2]]
 - [[Conceptual Model v0.2]]
 - [[Data Audit]]
 - [[Evidence Parameter Matrix]]
+- [[Operational Parameter Grounding v0.1]]
+- [[Queue and Analyst Service Design v0.1]]
 - [[Validation Plan v0.1]]
 
+## Key current insight
+At identical model scores and pooled service capacity:
+- risk-priority can materially increase fraud review within the observation horizon;
+- but it increases tail waiting time for lower-priority alerts;
+- total capacity/backlog does not disappear merely by changing priority.
+
+This is a **pilot result**, not yet a final thesis conclusion.
+
 ## Current blockers
-- Analyst capacity/review-time literature chưa chốt.
-- False-positive/friction cost và review-delay mechanism chưa chốt.
-- Persistent queue chưa implement.
+- transaction-fraud review-time range is still weakly grounded;
+- recovery/delay-to-loss mechanism is not identified;
+- false-positive/customer-friction monetary value is context-specific;
+- risk model is unusually strong on Xente and needs robustness checks.
 
-## Verified Xente facts
-- 95,662 labelled transactions; 193 fraud.
-- 3,742 CustomerIds; median 7 transactions/customer.
-- 70/15/15 chronological split: 104 / 39 / 50 fraud.
-- Significant cold-start in later periods.
-- AccountId/SubscriptionId are not clean nested customer entities.
+## Next priorities
+1. Seen vs cold-start customer performance.
+2. Rolling/temporal robustness and bootstrap intervals.
+3. Risk-score degradation / alternate model structural sensitivity.
+4. Variable capacity/service-time with multiple seeds.
+5. Only then add cost-sensitive priority/net-benefit sensitivity.
 
-## Next coding target
-Persistent event-driven alert queue + pooled analyst service, then FIFO vs risk-priority comparison.
+## Rule
+Không làm LLM, fraudster cognition hoặc dashboard trước khi robustness của core queue/policy model đủ rõ.
