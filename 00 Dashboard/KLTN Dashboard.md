@@ -16,7 +16,7 @@ Phát triển từ pilot `FinRisk-ABM-Policy-Simulation` thành một **empirica
 - **IEEE-CIS:** optional external robustness, not second full ABM.
 
 ## Current milestone
-**Queue/policy robustness after empirical baseline.**
+**Robustness of queue/policy conclusions.**
 
 ### Completed
 1. [[Data Audit]] ✅
@@ -26,6 +26,11 @@ Phát triển từ pilot `FinRisk-ABM-Policy-Simulation` thành một **empirica
 5. Literature grounding for analyst/capacity/cost ✅
 6. Persistent queue simulator ✅
 7. [[Xente Queue Pilot v0.1]] ✅
+8. Seen vs cold-start analysis ✅
+9. Expanding-window temporal robustness ✅
+10. Risk-model structural sensitivity ✅
+11. Stochastic service-time robustness over 100 seeds ✅
+12. Queue verification tests ✅
 
 ## Literature
 - [[AML-CFSim 2025]]
@@ -43,26 +48,45 @@ Phát triển từ pilot `FinRisk-ABM-Policy-Simulation` thành một **empirica
 - [[Queue and Analyst Service Design v0.1]]
 - [[Validation Plan v0.1]]
 
-## Key current insight
-At identical model scores and pooled service capacity:
-- risk-priority can materially increase fraud review within the observation horizon;
-- but it increases tail waiting time for lower-priority alerts;
-- total capacity/backlog does not disappear merely by changing priority.
+## Experiments
+- [[Xente Baseline Risk Model Feasibility]]
+- [[Xente Queue Pilot v0.1]]
+- [[Xente Robustness Pack v0.1]]
 
-This is a **pilot result**, not yet a final thesis conclusion.
+## Current robust insight
+Across the tested Xente score streams:
+- scarce service capacity creates backlog/delay;
+- risk-priority reallocates scarce service toward high-risk alerts;
+- fraud capture within a finite horizon generally increases relative to FIFO;
+- tail waiting time for lower-priority alerts worsens;
+- the qualitative result persists after removing current-Value features;
+- the result persists under stochastic lognormal service times.
+
+This is still a **conditional simulation result**, not a universal policy recommendation.
+
+## Important caution
+Xente has unusually strong transaction-Value/context signal.
+
+The amount-only baseline is nearly as strong as the full logistic model on the final test period.
+
+Therefore:
+- classifier novelty is not the contribution;
+- policy conclusions must be reported across time/model structures;
+- do not treat the final test PR-AUC as stable production performance.
 
 ## Current blockers
 - transaction-fraud review-time range is still weakly grounded;
 - recovery/delay-to-loss mechanism is not identified;
 - false-positive/customer-friction monetary value is context-specific;
-- risk model is unusually strong on Xente and needs robustness checks.
+- no practitioner validation of queue priority/workflow yet.
 
 ## Next priorities
-1. Seen vs cold-start customer performance.
-2. Rolling/temporal robustness and bootstrap intervals.
-3. Risk-score degradation / alternate model structural sensitivity.
-4. Variable capacity/service-time with multiple seeds.
-5. Only then add cost-sensitive priority/net-benefit sensitivity.
+1. Alert-threshold robustness: 0.5%, 1%, 2%, 5%.
+2. Add explicit starvation/service-equity metrics.
+3. Variable-capacity team structure (not only stochastic service time).
+4. Draft practitioner-validation questions.
+5. Decide whether cost-sensitive priority belongs in core or secondary analysis.
+6. After these, freeze MVP specification for GVHD review.
 
 ## Rule
 Không làm LLM, fraudster cognition hoặc dashboard trước khi robustness của core queue/policy model đủ rõ.
