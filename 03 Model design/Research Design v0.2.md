@@ -2,6 +2,7 @@
 status: draft
 version: v0.2
 legacy_basis: FinRisk-ABM-Policy-Simulation
+primary_dataset: Xente Fraud Detection
 ---
 
 # Research Design v0.2
@@ -28,7 +29,7 @@ Predictive metrics không đủ để đánh giá fraud-management policy. Opera
 ## 3. Main Research Question
 > **How do alternative transaction-fraud management policies perform under operational capacity constraints and uncertainty when evaluated in a dynamic agent-based/policy-simulation environment?**
 
-Câu hỏi này cố ý chưa khóa cứng nhãn ABM trước khi conceptual model chứng minh đủ persistent state, interaction và feedback.
+Câu hỏi này cố ý chưa khóa cứng nhãn ABM trước khi implementation chứng minh đủ persistent state, interaction và feedback.
 
 ## 4. Sub-RQs
 
@@ -41,15 +42,44 @@ Analyst capacity, queue/backlog và review delay thay đổi policy effectivenes
 ### RQ3 — Robustness under uncertainty
 Policy conclusions có ổn định khi fraud regime, cost assumptions, uncertain parameters và một số structural assumptions quan trọng thay đổi không?
 
-## 5. Objectives
-1. Chọn một primary transaction-fraud dataset làm empirical grounding.
+## 5. Empirical strategy
+
+### Primary dataset
+**Xente Fraud Detection.**
+
+Reason:
+- explicit `CustomerId`, `AccountId`, `SubscriptionId`;
+- actual `TransactionStartTime`;
+- observed fraud label in training period;
+- manageable size for repeated experiments.
+
+### Baseline data strategy
+Không dùng synthetic generator làm core baseline.
+
+Baseline sẽ **replay observed Xente transaction events chronologically**, sau đó đưa chúng qua:
+1. leakage-safe rolling customer features;
+2. risk engine;
+3. policy;
+4. persistent alert queue;
+5. analyst service;
+6. outcome/cost engine.
+
+Synthetic/counterfactual perturbation chỉ xuất hiện ở stress scenarios và phải được gắn nhãn rõ.
+
+### Primary stateful entity
+**Customer = `CustomerId`.**
+
+`AccountId` và `SubscriptionId` ban đầu là nested grouping/state, chưa tách thành independent agents.
+
+## 6. Objectives
+1. Profile Xente và xây chronological empirical baseline.
 2. Định nghĩa state, rules và parameter provenance.
-3. Xây dynamic baseline gồm transaction/customer state, risk engine, policy layer, persistent alert queue và analyst capacity.
-4. So sánh ít nhất 2–3 policy dưới cùng environment.
+3. Xây dynamic baseline gồm customer state, risk engine, policy layer, persistent alert queue và analyst capacity.
+4. So sánh 2–3 policy dưới cùng environment.
 5. Đánh giá bằng system metrics, không chỉ predictive metrics.
 6. Kiểm tra robustness qua repeated seeds, parameter sensitivity và structural sensitivity có chọn lọc.
 
-## 6. Expected contribution
+## 7. Expected contribution
 
 ### Methodological
 Đặt risk model vào một dynamic operational environment có capacity constraints và explicit uncertainty.
@@ -60,10 +90,10 @@ Làm rõ khi nào policy ranking thay đổi do capacity, risk regime hoặc cos
 ### Reproducibility
 Tách empirical inputs, literature-informed ranges và explicit assumptions.
 
-## 7. Scope
+## 8. Scope
 
 ### Core
-- transaction fraud;
+- Xente-based transaction fraud baseline;
 - policy experimentation;
 - queue/backlog;
 - analyst capacity;
@@ -71,14 +101,16 @@ Tách empirical inputs, literature-informed ranges và explicit assumptions.
 - uncertainty and sensitivity.
 
 ### Extension only
+- IEEE-CIS external robustness;
 - adaptive fraudster cognition;
 - LLM analyst/advisor;
 - sophisticated game-theoretic equilibrium;
 - bank-specific digital twin.
 
-## 8. Claim boundary
+## 9. Claim boundary
 Không claim:
 - mô phỏng chính xác một ngân hàng cụ thể;
+- Xente đại diện cho ngân hàng Việt Nam;
 - policy tối ưu phổ quát;
 - fraud actor thật suy nghĩ như model;
 - simulated cost là chi phí tài chính thật nếu không có evidence.
@@ -86,7 +118,7 @@ Không claim:
 Kết luận nên có dạng:
 > Policy A tạo trade-off tốt hơn policy B trong các scenario/ranges đã đánh giá, nhưng ranking có thể thay đổi khi điều kiện X thay đổi.
 
-## 9. Legacy findings dùng như pilot hypotheses
+## 10. Legacy findings dùng như pilot hypotheses
 Các insight từ repo cũ chỉ dùng để thiết kế experiment mới:
 - capacity thấp có thể làm overflow tăng và đổi policy ranking;
 - threshold nhạy hơn có thể tăng recall nhưng tăng workload/FP;
@@ -95,11 +127,14 @@ Các insight từ repo cũ chỉ dùng để thiết kế experiment mới:
 
 Các insight này phải được re-test trong KLTN.
 
-## 10. Immediate decisions
-- [ ] Primary dataset.
-- [ ] Customer hay Account là stateful entity chính.
-- [ ] Queue persistence và service discipline.
+## 11. Decisions
+
+- [x] Primary dataset: **Xente Fraud Detection**.
+- [x] Primary stateful entity: **CustomerId**.
+- [x] Account/Subscription: nested grouping/state trước, không tách agent ngay.
+- [x] Baseline data mode: **observed-event replay**, không synthetic core.
+- [ ] Queue discipline và review-delay mechanism.
 - [ ] Risk-engine baseline.
 - [ ] Main policy set.
 - [ ] Analyst/cost parameter ranges.
-- [ ] ABM hay dynamic policy simulation là framing chính xác hơn.
+- [ ] Final framing: ABM hay dynamic policy simulation sau khi implementation tối thiểu hoàn tất.
