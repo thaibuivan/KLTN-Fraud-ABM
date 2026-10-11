@@ -1,153 +1,82 @@
-# READING ORDER — Nắm toàn bộ KLTN từ branch chatgpt-draft
+# THỨ TỰ ĐỌC REPO — đọc ít nhưng đúng thứ tự
 
-## Mục tiêu
+Mục tiêu của file này là giúp bạn **không bị loạn** khi repo có nhiều file do các vòng làm việc trước tạo ra.
 
-Đọc theo thứ tự này để hiểu **mình đang làm gì bây giờ**, sau đó mới quay lại các kết quả Xente cũ để biết **mình đã làm được gì trước đó**.
+## Nếu chỉ có 10–15 phút
 
----
+Chỉ đọc 4 file:
 
-## Track A — Nắm đề tài trong 20–30 phút
+1. [[Current Direction - 2026-10-11]]
+2. [[Research Design v1.0 - Policy Experimentation]]
+3. [[Conceptual Model v1.0 - Adaptive Policy ABM]]
+4. [[GVHD Brief - Current Direction 2026-10-11]]
 
-### 1. [[Current Direction - 2026-10-11]]
-Đọc đầu tiên.
+Đọc xong 4 file này phải tự trả lời được:
 
-Sau file này phải trả lời được:
-- mục tiêu nghiên cứu là gì;
-- ABM đóng vai trò gì;
-- adaptive fraudster đóng vai trò gì;
-- analyst capacity đóng vai trò gì;
-- data nào đang dùng.
+- Tôi nghiên cứu vấn đề gì?
+- Vì sao dùng ABM?
+- Data nào dùng?
+- Fraudster thích nghi ở đâu?
+- Policy nào được thử?
+- Sản phẩm cuối là gì?
 
-### 2. [[Research Design v1.0 - Policy Experimentation]]
-Đọc để hiểu:
-- research problem;
-- main RQ;
-- 3 sub-RQ;
-- contribution;
-- scope và claim boundary.
+## Khi đã hiểu hướng, đọc methodology
 
-### 3. [[Conceptual Model v1.0 - Adaptive Policy ABM]]
-Đọc để hình dung model chạy như thế nào:
-- state;
-- action;
-- feedback;
-- queue;
-- analyst;
-- adaptation.
+Theo thứ tự:
 
-### 4. [[GVHD Brief - Current Direction 2026-10-11]]
-Đọc cuối Track A.
+1. [[Two-Scenario Data Strategy v0.1]]
+2. [[Parameter Registry v0.2]]
+3. [[Adaptive Fraudster Design v0.1]]
+4. [[Queue and Analyst Service Design v0.1]]
+5. [[Operational Parameter Grounding v0.1]]
+6. [[Validation Plan v0.1]]
 
-Nếu hiểu được file này, bạn đã đủ để giải thích đề tài cho GVHD trong vài phút.
+Mục tiêu là hiểu:
+- cái gì lấy được từ data;
+- cái gì phải lấy từ literature;
+- cái gì chỉ là assumption;
+- cái gì chính là biến policy để thử nghiệm.
 
----
+## Sau đó mới đọc những gì đã làm thật trên Xente
 
-## Track B — Hiểu methodology
+Theo thứ tự:
 
-### 5. [[Two-Scenario Data Strategy v0.1]]
-Hiểu tại sao:
-- IEEE-CIS và Xente là hai scenario riêng;
-- không merge hai dataset;
-- dataset ground được gì và không ground được gì.
+1. [[Xente Empirical Profile]]
+2. [[Xente Baseline Risk Model Feasibility]]
+3. [[Xente Queue Pilot v0.1]]
+4. [[Xente Robustness Pack v0.1]]
+5. [[Xente Alert-rate and Starvation Sensitivity v0.1]]
+6. [[Xente Variable Team Capacity Sensitivity v0.1]]
 
-### 6. [[Parameter Registry v0.2]]
-Đây là file quan trọng nhất trước khi code sâu.
+Đây là **pilot/groundwork cho Xente scenario**, không phải full result của adaptive-ABM hiện tại.
 
-Phân biệt:
-- empirical parameters;
-- literature-informed parameters;
-- policy variables;
-- uncertain behavioral assumptions.
+## Đọc code theo pipeline
 
-### 7. [[Adaptive Fraudster Design v0.1]]
-Hiểu:
-- adaptive state;
-- reward;
-- learning rule;
-- dormancy;
-- static comparator.
+```text
+profile_xente.py
+    ↓
+build_xente_features.py
+    ↓
+train_xente_baseline.py
+    ↓
+simulate_alert_queue.py
+    ↓
+adaptive_fraudster.py
+    ↓
+run_adaptive_vs_static.py
+```
 
-### 8. [[Queue and Analyst Service Design v0.1]]
-Đây là một trong những phần mạnh nhất từ hướng cũ và vẫn dùng được.
+Mỗi file chỉ cần trả lời bốn câu:
+- Input là gì?
+- Nó xử lý gì?
+- Output là gì?
+- Assumption quan trọng nhất là gì?
 
-Hiểu:
-- persistent queue;
-- FIFO vs risk-priority;
-- pooled capacity;
-- waiting time/backlog;
-- starvation.
+Không cần thuộc từng dòng code.
 
-### 9. [[Operational Parameter Grounding v0.1]]
-Đọc để hiểu tại sao không được tự bịa:
-- analyst cases/day;
-- review time;
-- analyst accuracy;
-- recovery rate.
+## File KHÔNG nên đọc đầu tiên
 
-### 10. [[Validation Plan v0.1]]
-Đọc để hiểu:
-- verification;
-- input validation;
-- stochastic uncertainty;
-- parameter sensitivity;
-- structural sensitivity.
-
-Lưu ý: file này được viết trước adaptive-fraudster direction nên cần được mở rộng sau, nhưng nền validation vẫn hữu ích.
-
----
-
-## Track C — Hiểu những gì đã thật sự làm bằng Xente
-
-### 11. [[Xente Empirical Profile]]
-Đây là evidence thực nghiệm quan trọng nhất đã hoàn thành.
-
-### 12. [[Xente Baseline Risk Model Feasibility]]
-Hiểu risk score baseline và hạn chế mạnh của Xente:
-- Value signal rất mạnh;
-- classifier không phải contribution.
-
-### 13. [[Xente Queue Pilot v0.1]]
-Thí nghiệm đầu tiên chứng minh queue policy có thể thay đổi outcome khi score/capacity giữ nguyên.
-
-### 14. [[Xente Robustness Pack v0.1]]
-Hiểu:
-- temporal instability;
-- weaker score model;
-- cold-start;
-- stochastic service robustness.
-
-### 15. [[Xente Alert-rate and Starvation Sensitivity v0.1]]
-Hiểu:
-- threshold thấp hơn có thể tạo overload;
-- risk-priority có trade-off starvation.
-
-### 16. [[Xente Variable Team Capacity Sensitivity v0.1]]
-Hiểu tác động của capacity variability.
-
-Các file 11–16 là **pilot/empirical groundwork cho Xente scenario**, không phải full result của hướng adaptive-ABM hiện tại.
-
----
-
-## Track D — Code
-
-Đọc code theo thứ tự:
-
-1. `scripts/profile_xente.py`
-2. `scripts/build_xente_features.py`
-3. `scripts/train_xente_baseline.py`
-4. `scripts/simulate_alert_queue.py`
-5. `scripts/adaptive_fraudster.py`
-6. `scripts/run_adaptive_vs_static.py`
-7. `tests/test_alert_queue.py`
-8. `tests/test_adaptive_fraudster.py`
-
-Sau đó mới đọc các robustness runners.
-
----
-
-## Files không nên dùng để học current direction
-
-Các file dưới đây là **superseded framing**:
+Các file sau phản ánh hướng cũ Xente-only và đã bị superseded về framing:
 
 - [[Research Design v0.2]]
 - [[Candidate Core Specification v0.3]]
@@ -157,27 +86,12 @@ Các file dưới đây là **superseded framing**:
 - [[Methodology Skeleton v0.1]]
 - [[Results and Discussion Outline v0.1]]
 
-Chúng không sai hoàn toàn, nhưng mô tả hướng **Xente-only queue/capacity** trước khi adaptive-fraudster + two-scenario framing được chốt.
+Chúng vẫn hữu ích để truy lịch sử hoặc lấy lại mechanism, nhưng **không dùng để học hướng hiện tại**.
 
-Đọc chúng chỉ khi cần truy lịch sử quyết định hoặc tái sử dụng một mechanism.
-
----
-
-## Files lịch sử / archive
+## File lịch sử
 
 - [[Legacy Project Audit - FinRisk]]
 - [[Legacy Migration Map]]
 - [[Prototype-to-Thesis Gap]]
 
-Chúng giúp hiểu dự án đi từ prototype cũ tới KLTN như thế nào, nhưng không cần đọc trước buổi gặp GVHD.
-
----
-
-## Nếu chỉ có 10 phút
-
-Đọc đúng 4 file:
-
-1. [[Current Direction - 2026-10-11]]
-2. [[Research Design v1.0 - Policy Experimentation]]
-3. [[Conceptual Model v1.0 - Adaptive Policy ABM]]
-4. [[GVHD Brief - Current Direction 2026-10-11]]
+Chỉ đọc khi muốn biết dự án đi từ prototype cũ tới KLTN hiện tại như thế nào.
