@@ -1,25 +1,24 @@
-# GVHD Brief — Current Direction — 2026-10-11
+# Brief gặp GVHD — Hướng hiện tại — 2026-10-11
 
-## 1. What I am studying
+## 1. Em đang nghiên cứu gì?
 
-I am using ABM as a **policy experimentation / stress-testing environment** for transaction-fraud management.
+Em dùng ABM như một **môi trường thử nghiệm/stress-test chính sách quản lý gian lận giao dịch**.
 
-The thesis is not primarily about building the highest-AUC classifier.
+Em không tập trung vào việc xây classifier có AUC cao nhất.
 
-## 2. Why ABM
+## 2. Vì sao dùng ABM?
 
-The system contains persistent state and feedback:
-
-- customer/fraud transaction history;
+Hệ thống có:
+- customer/fraud state tồn tại qua thời gian;
 - adaptive fraud behavior;
-- alert queues;
+- alert queue;
 - limited analyst capacity;
-- backlog and waiting time;
-- policy decisions that affect future system state.
+- backlog / waiting time;
+- feedback từ system response sang hành vi tương lai.
 
-If the final model collapses to transaction -> score -> threshold -> cost, the ABM label should be reconsidered.
+Nếu model cuối cùng chỉ còn transaction -> score -> threshold -> cost thì em sẽ cân nhắc gọi là dynamic/discrete-event policy simulation thay vì ép ABM.
 
-## 3. Proposed model
+## 3. Mô hình dự kiến
 
 ```text
 Customer / Fraudster
@@ -36,49 +35,68 @@ Approve / Step-up / Review / Block
                    ↓
                 Outcome
 
-Fraudster observes response -> updates strategy -> next transaction
+Fraudster quan sát phản hồi -> update strategy -> transaction tiếp theo
 ```
 
-## 4. Main research question
+## 4. Main RQ
 
-> How do alternative transaction-fraud management policies perform under adaptive fraudster behavior and analyst capacity constraints?
+> Các chính sách quản lý gian lận giao dịch khác nhau hoạt động như thế nào khi fraudster có khả năng thích nghi và analyst capacity bị giới hạn?
 
 ## 5. Data
 
-Current core scenarios:
+Hai scenario core:
 - IEEE-CIS;
 - Xente.
 
-They are treated as separate empirical environments, not merged.
+Không merge hai dataset.
 
-## 6. Policies to compare
+## 6. Policy dự kiến
 
 - Fixed threshold.
 - Cost-sensitive.
 - Capacity-aware.
 
-## 7. Core experiments
+## 7. Experiment dự kiến
 
 1. Static vs adaptive fraudster.
 2. Policy comparison.
 3. Analyst-capacity stress test.
 
-## 8. Current methodological concern
+## 8. Điểm khó methodology
 
-The difficult part is not only coding agents. It is identifying mechanisms and classifying parameters correctly:
+Khó không chỉ ở code agent.
 
-- empirical parameters;
-- literature-informed operational parameters;
-- policy variables;
-- uncertain behavioral assumptions.
+Khó nhất là:
+- chọn đúng mechanism;
+- biết parameter nào empirical;
+- parameter nào literature-informed;
+- parameter nào policy variable;
+- parameter nào chỉ là behavioral assumption.
 
-The goal is not to claim one perfectly calibrated parameter vector, but to test whether policy conclusions remain robust over plausible parameter ranges.
+Mục tiêu không phải tìm một “true parameter vector”, mà xem policy conclusion có robust trong plausible ranges hay không.
 
-## 9. Questions for supervisor
+## 9. Những gì em đã làm thật
 
-1. Is policy experimentation the right central framing?
-2. Is adaptive fraudster best treated as a stress mechanism rather than the main research output?
-3. Are IEEE-CIS + Xente sufficient as the core empirical scope?
-4. Is customer/fraudster/analyst + persistent queue enough to justify ABM?
-5. Is fixed vs cost-sensitive vs capacity-aware a reasonable policy set?
-6. Should behavioral parameters be handled mainly by sensitivity analysis rather than aggressive calibration?
+Trên Xente:
+- data audit / empirical profile;
+- leakage-safe features;
+- logistic risk baseline;
+- persistent queue;
+- FIFO vs risk-priority;
+- capacity stress;
+- threshold/load sensitivity;
+- stochastic/variable capacity robustness.
+
+Adaptive fraudster:
+- đã có conceptual design;
+- đã có smoke-test code;
+- chưa tích hợp full empirical ABM.
+
+## 10. Các câu cần hỏi cô
+
+1. Policy experimentation có đúng là central framing không?
+2. Adaptive fraudster nên được xem là stress mechanism thay vì main output có đúng không?
+3. IEEE-CIS + Xente có đủ làm core scope không?
+4. Cấu trúc customer/fraudster/analyst + queue có đủ justify ABM không?
+5. Fixed / cost-sensitive / capacity-aware có phải policy set phù hợp không?
+6. Behavioral parameters nên xử lý chủ yếu bằng sensitivity thay vì cố calibration có hợp lý không?
