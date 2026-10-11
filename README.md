@@ -1,95 +1,95 @@
 # KLTN — Thử nghiệm chính sách quản lý gian lận bằng ABM
 
-Đây là kho làm việc cho khóa luận về **thử nghiệm chính sách quản lý gian lận giao dịch bằng mô phỏng dựa trên tác tử (Agent-Based Modelling — ABM)**.
+Kho này phát triển trực tiếp từ đề án **FinRisk Decision Simulation**.
+
+## Một câu để nhớ
+
+> Phát triển framework transaction-risk decisioning của đề án thành một dynamic policy-simulation / ABM có empirical grounding tốt hơn, persistent analyst queue và adaptive fraudster.
 
 ## Hướng nghiên cứu hiện tại
 
-> Dùng ABM như một “phòng thí nghiệm chính sách” để stress-test các chính sách quản lý gian lận trong một hệ thống động, nơi fraudster có thể thích nghi với phản hồi của hệ thống và fraud analyst có năng lực review hữu hạn.
-
-Cách hiểu ngắn gọn:
-
-- **Mục tiêu nghiên cứu:** thử nghiệm / stress-test chính sách.
-- **ABM:** công cụ nghiên cứu.
-- **Adaptive fraudster:** cơ chế tạo áp lực đối kháng lên policy.
-- **Alert queue + analyst capacity:** ràng buộc vận hành.
-- **Risk model / ML:** một thành phần của hệ thống, không phải mục tiêu cuối.
-- **Dữ liệu:** dùng để grounding các phân bố, state và risk score; không giả vờ tái tạo chính xác một ngân hàng thật.
+- **Mục tiêu:** thử nghiệm / stress-test fraud-management policy.
+- **ABM / dynamic simulation:** công cụ nghiên cứu.
+- **Adaptive fraudster:** phát triển risky actor của đề án thành cơ chế feedback qua nhiều vòng.
+- **Persistent queue + analyst capacity:** phát triển daily overflow thành operational dynamics.
+- **Risk model:** thành phần tạo risk score, không phải contribution chính.
+- **Xente:** empirical development environment chính.
+- **IEEE-CIS:** optional external robustness nếu core Xente hoàn thành.
 
 ## Bắt đầu đọc từ đâu?
 
-Đọc theo thứ tự:
-
 1. `00 Dashboard/READING ORDER.md`
-2. `00 Dashboard/Current Direction - 2026-10-11.md`
-3. `03 Model design/Research Design v1.0 - Policy Experimentation.md`
-4. `03 Model design/Conceptual Model v1.0 - Adaptive Policy ABM.md`
-5. `04 Meetings/GVHD Brief - Current Direction 2026-10-11.md`
+2. `00 Dashboard/De an to KLTN - Development Map.md`
+3. `00 Dashboard/Current Direction - 2026-10-11.md`
+4. `03 Model design/Research Design v1.1 - Develop from FinRisk Proposal.md`
+5. `03 Model design/Xente Full Model Specification v1.0.md`
+6. `05 Experiments/Final Core Experiment Grid v1.0.md`
 
-Sau đó mới đọc các file parameter, data, experiment và code.
+## Core experiment
 
-## Hai môi trường dữ liệu dự kiến
+```text
+Static / Adaptive fraudster
+×
+Fixed / Capacity-aware policy
+×
+Low / Medium / High analyst capacity
+=
+12 configurations
+```
 
-### Scenario A — IEEE-CIS
-Đại diện cho môi trường online/card/e-commerce.
+Cost-sensitive policy là extension nếu cost assumptions đủ defensible.
 
-### Scenario B — Xente
-Đại diện cho môi trường mobile/payment/e-commerce tại Uganda.
+FIFO vs risk-priority là structural robustness, không nhân vào toàn bộ core grid.
 
-**Không ghép hai dataset thành một dataset lớn.** Mỗi dataset parameterize một scenario riêng của cùng framework.
+## Những gì đã làm được
 
-## Những gì đã làm được từ hướng Xente trước đây
-
-Phần này **không bỏ đi**, vì đã có nhiều kết quả và code thật:
-
-- audit và profile Xente;
+Xente:
+- data audit/profile;
 - leakage-safe customer-history features;
 - chronological logistic risk baseline;
+- temporal / score-model robustness;
 - persistent alert queue;
 - FIFO vs risk-priority;
-- capacity stress;
-- threshold/load sensitivity;
-- stochastic service-time robustness;
-- variable team-capacity sensitivity;
-- unit tests cho queue.
+- fixed-capacity threshold sensitivity;
+- stochastic service;
+- variable team capacity;
+- starvation/tail waiting diagnostics.
 
-Các file cũ nói “Xente là core duy nhất”, “IEEE chỉ optional” hay “adaptive fraudster không phải core” đã **hết vai trò định hướng**, nhưng vẫn được giữ để truy vết và tái sử dụng mechanism.
+Adaptive fraudster:
+- conceptual specification;
+- heuristic/bandit-style prototype;
+- unit tests;
+- synthetic smoke runner.
 
-## Code chính hiện có
+Policy layer:
+- shared policy interface;
+- fixed-threshold policy;
+- capacity-aware policy;
+- cost-sensitive extension;
+- policy unit tests đã được thêm vào repo.
 
-### Xente / queue
-- `scripts/profile_xente.py`
-- `scripts/build_xente_features.py`
-- `scripts/train_xente_baseline.py`
-- `scripts/simulate_alert_queue.py`
-- các script sensitivity / robustness.
+## Phần còn thiếu để hoàn thành core KLTN
 
-### Adaptive fraudster
-- `scripts/adaptive_fraudster.py`
-- `scripts/run_adaptive_vs_static.py`
-- `tests/test_adaptive_fraudster.py`
+1. tích hợp policy interface vào event-driven Xente simulator;
+2. tích hợp static fraudster với empirical fraud generator;
+3. nối adaptive feedback vào Xente environment;
+4. chạy 12 core configurations;
+5. behavioral sensitivity + convergence;
+6. final tables/figures;
+7. Methods / Results / Discussion.
 
-Lưu ý: adaptive runner hiện mới là **smoke test**, chưa phải kết quả khóa luận.
+## Git
 
-## Quy tắc Git
+- `main`: stable.
+- `chatgpt-draft`: active research branch.
 
-- `main`: bản ổn định đã chấp nhận.
-- `chatgpt-draft`: branch đang làm việc / review trước khi merge.
-
-## Bảo mật và dữ liệu
-
-Không commit:
-- raw Xente / IEEE-CIS;
-- dữ liệu nội bộ công ty;
-- threshold/rule proprietary;
-- API key, token, mật khẩu;
-- dữ liệu người dùng nhạy cảm.
-
-## Giới hạn claim
+## Claim boundary
 
 Không claim:
-- digital twin của ngân hàng;
-- fraudster trong model suy nghĩ giống fraudster thật;
-- một policy tối ưu phổ quát;
-- ngưỡng/staffing production cho một tổ chức cụ thể.
+- digital twin;
+- production threshold;
+- bank staffing recommendation;
+- exact fraudster cognition;
+- universal best policy.
 
-Kết luận phải luôn gắn với scenario, assumption và parameter range đã thử.
+Kết luận phải gắn với scenario, assumptions và parameter ranges đã thử.
