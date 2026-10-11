@@ -1,141 +1,135 @@
 # KLTN Dashboard
 
-## Current thesis direction
+## Hướng hiện tại
 
-**Current framing (2026-10-11):**
+> **Dùng ABM để thử nghiệm chính sách quản lý gian lận giao dịch trong hệ thống có fraudster thích nghi và analyst capacity hữu hạn.**
 
-> Dùng ABM như một môi trường thử nghiệm/stress-test chính sách quản lý gian lận giao dịch, trong đó fraudster có khả năng thích nghi với phản hồi hệ thống và fraud analyst có năng lực review hữu hạn.
+### Câu hỏi nghiên cứu chính
 
-### Main RQ
+> Các chính sách quản lý gian lận giao dịch khác nhau hoạt động như thế nào khi fraudster có khả năng thích nghi và năng lực xử lý của fraud analyst bị giới hạn?
 
-> **How do alternative transaction-fraud management policies perform under adaptive fraudster behavior and analyst capacity constraints?**
+## Hãy nhớ 5 khối này
 
-## What is current vs superseded
+```text
+Research Question
+      ↓
+Real Data
+      ↓
+Risk + Policy + Queue + Analyst
+      ↓
+Adaptive Fraudster
+      ↓
+Policy Experiments + Robustness
+```
 
-### Current master documents
+## File nào là “nguồn sự thật” hiện tại?
+
 - [[Current Direction - 2026-10-11]]
 - [[Research Design v1.0 - Policy Experimentation]]
 - [[Conceptual Model v1.0 - Adaptive Policy ABM]]
 - [[Parameter Registry v0.2]]
 - [[Two-Scenario Data Strategy v0.1]]
+- [[Adaptive Fraudster Design v0.1]]
 - [[Adaptive Policy Experiment Plan v0.1]]
 - [[GVHD Brief - Current Direction 2026-10-11]]
 
-### Earlier Xente-only direction
-The older Xente queue/capacity documents are **not deleted**, because they contain real completed work, code, diagnostics and pilot results.
+Các file v0.1/v0.2/v0.3 cũ không phải hướng hiện tại nếu nội dung mâu thuẫn với các file trên.
 
-However, files such as:
-- [[Research Design v0.2]]
-- [[Candidate Core Specification v0.3]]
-- [[Core Experiment Grid v0.1]]
-- [[Conceptual Model v0.2]]
-- [[GVHD Update - Xente Queue Milestone]]
+## Những gì đã làm thật
 
-are **superseded as project framing**.
+### 1. Xente data
+- audit dữ liệu;
+- profile empirical;
+- 95,662 giao dịch có nhãn;
+- 193 fraud;
+- 3,742 CustomerId;
+- phát hiện cold-start và strong Value signal.
 
-Use them only to understand the previous Xente-only queue design or to reuse validated mechanisms.
+### 2. Risk baseline
+- chronological 70/15/15;
+- leakage-safe customer history;
+- logistic baseline;
+- temporal robustness;
+- full / no-current-value / amount-only comparison.
 
-See [[Repo Audit - 2026-10-11]].
+### 3. Queue / analyst capacity
+- persistent alert queue;
+- FIFO;
+- risk-priority;
+- fixed/relative pooled capacity;
+- threshold overload;
+- stochastic service time;
+- variable team capacity;
+- starvation / tail-wait diagnostics;
+- queue verification tests.
 
-## Work already completed
+### 4. Hướng ABM mới
+- Research Design v1.0;
+- two-scenario strategy: IEEE-CIS + Xente;
+- adaptive fraudster specification;
+- adaptive fraudster smoke-test code;
+- Parameter Registry;
+- supervisor brief.
 
-### A. Xente empirical groundwork
-- Data audit completed.
-- 95,662 labelled Xente transactions profiled.
-- 193 fraud cases verified.
-- 3,742 CustomerIds verified.
-- Customer repetition and cold-start patterns documented.
-- Strong Value/context signal documented.
-- Leakage-safe past-only customer features implemented.
+## Những gì chưa xong
 
-### B. Risk baseline
-- Chronological 70/15/15 split implemented.
-- Regularized logistic risk model implemented.
-- Temporal instability checked.
-- Full / no-current-value / amount-only score structures compared.
+- IEEE-CIS audit theo scope hiện tại;
+- tích hợp adaptive fraudster vào empirical scenario;
+- freeze 3 policy definitions;
+- full adaptive-vs-static experiment;
+- cross-scenario robustness;
+- final sensitivity;
+- final Results/Discussion.
 
-### C. Operational queue module
-- Persistent event-driven alert queue implemented.
-- FIFO and risk-priority implemented.
-- Relative/fixed pooled capacity experiments implemented.
-- Alert-threshold overload sensitivity implemented.
-- Stochastic service-time sensitivity implemented.
-- Variable team-capacity sensitivity implemented.
-- Starvation/tail-wait diagnostics implemented.
-- Queue verification tests implemented.
-
-### D. Current ABM direction
-- Current Research Design v1.0 drafted.
-- Two-scenario strategy drafted: IEEE-CIS + Xente.
-- Adaptive fraudster mechanism specified.
-- Static-vs-adaptive smoke-test prototype implemented.
-- Parameter Registry v0.2 drafted.
-- Current supervisor brief drafted.
-
-## Current conceptual model
+## Conceptual model
 
 ```text
 Customer --------\
                   \
-                   -> Transactions -> Detection System -> APPROVE
-Adaptive Fraudster/                           |           -> STEP-UP
-                                             |           -> REVIEW -> Alert Queue -> Analyst
-                                             |           -> BLOCK
-                                             |
-                                             +--> system response
+                   -> Transaction -> Detection System -> Policy
+Fraudster --------/                                  |
+   ^                                                  |
+   |                                                  v
+   +--------- observe response <--- Approve / Step-up / Review / Block
                                                     |
                                                     v
-                                            fraudster adaptation
+                                               Alert Queue
+                                                    |
+                                                    v
+                                                 Analyst
+                                                    |
+                                                    v
+                                                  Outcome
 ```
 
-### Feedback loops
+## Policy dự kiến
 
-1. **Adversarial loop:** action -> system response -> learning/adaptation -> next action.
-2. **Operational loop:** policy -> alerts -> queue/backlog -> review delay/capacity -> system outcomes.
+1. Fixed threshold.
+2. Cost-sensitive.
+3. Capacity-aware.
 
-## Current data strategy
+## Thí nghiệm chính
 
-### Scenario A
-IEEE-CIS — online/card/e-commerce environment.
-
-### Scenario B
-Xente — mobile/payment/e-commerce environment.
-
-The two datasets are not merged.
-
-## Current policy families
-
-1. Fixed-threshold policy.
-2. Cost-sensitive policy.
-3. Capacity-aware policy.
-
-## Core experiments
-
-1. Static vs adaptive fraudster.
+1. Static vs Adaptive Fraudster.
 2. Policy comparison.
 3. Analyst-capacity stress test.
 
-## Parameter philosophy
+## Quy tắc parameter
 
-Do not search for one "true" value for every parameter.
+Mỗi parameter phải thuộc một trong bốn nhóm:
 
-Classify each parameter as:
 - empirical;
 - literature-informed;
 - policy variable;
-- uncertain behavioral assumption.
+- explicit behavioral assumption.
 
-Sensitivity-test uncertain parameters and mechanisms.
+Không có dữ liệu thì không được giả vờ là đã “estimate”.
 
-## Immediate blockers / open decisions
+## Việc tiếp theo
 
-- GVHD confirmation of the final framing.
-- Final decision on exact policy definitions.
-- IEEE-CIS detailed audit for the current two-scenario framework.
-- Final mapping from dataset variables to ABM states/parameters.
-- Public grounding for adaptive-fraudster mechanisms where possible.
-- Final decision on how much customer-friction/cost monetization to include.
-
-## Immediate reading order
-
-Open [[READING ORDER]].
+1. Gặp GVHD và chốt framing.
+2. Freeze policy definitions.
+3. Audit IEEE-CIS.
+4. Tích hợp adaptive fraudster vào một scenario trước.
+5. Chạy MVP end-to-end.
+6. Sau đó mới mở rộng robustness.
