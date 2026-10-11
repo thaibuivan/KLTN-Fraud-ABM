@@ -1,56 +1,81 @@
-# Research Design v1.0 — Policy Experimentation
+# Research Design v1.0 — Thử nghiệm chính sách
 
-## Working title
+## Tên đề tài dự kiến
 
+**Mô phỏng dựa trên tác tử để stress-test chính sách quản lý gian lận giao dịch dưới hành vi gian lận thích nghi và giới hạn năng lực phân tích**
+
+Tên tiếng Anh:
 **Agent-Based Stress Testing of Transaction Fraud-Management Policies under Adaptive Fraudster Behavior and Analyst Capacity Constraints**
 
-Vietnamese working title:
+## Vấn đề nghiên cứu
 
-**Mô phỏng dựa trên tác tử để thử nghiệm chính sách quản lý gian lận giao dịch dưới hành vi gian lận thích nghi và giới hạn năng lực phân tích**
+Fraud detection thường được đánh giá bằng AUC, Precision, Recall, F1.
 
-## Research problem
+Nhưng khi triển khai thật, risk score phải được chuyển thành hành động:
+- approve;
+- step-up;
+- review;
+- block.
 
-Fraud-detection research is often evaluated with predictive metrics such as AUC, precision, recall and F1. In deployment, however, a risk score must be converted into actions such as approve, step-up authentication, review or block.
+Hạ threshold có thể tăng fraud capture nhưng đồng thời:
+- tăng alert;
+- tăng false positive;
+- làm analyst quá tải;
+- tăng backlog;
+- tăng review delay;
+- tăng customer friction.
 
-Lower thresholds may improve fraud capture but also increase alerts, false positives, analyst workload, queue length and review delay. At the same time, fraudsters may react to system feedback and alter transaction amount, timing, identity or strategy.
+Ngoài ra fraudster có thể phản ứng lại hệ thống và thay đổi:
+- amount;
+- timing;
+- identity;
+- strategy.
 
-The thesis therefore studies fraud management as a **dynamic policy problem**, not only a classification problem.
+Vì vậy đề tài xem fraud management là một **dynamic policy problem**, không chỉ là classification problem.
 
-## Main research question
+## Câu hỏi nghiên cứu chính
 
-> How do alternative transaction-fraud management policies perform under adaptive fraudster behavior and analyst capacity constraints?
+> Các chính sách quản lý gian lận giao dịch khác nhau hoạt động như thế nào khi fraudster có khả năng thích nghi và analyst capacity bị giới hạn?
 
-## RQ1 — Adaptation
+## RQ1 — Adaptive fraudster
 
-How does adaptive fraudster behavior affect fraud loss and detection outcomes relative to static fraud behavior?
+Hành vi thích nghi làm thay đổi fraud loss và detection outcome thế nào so với fraudster tĩnh?
 
-## RQ2 — Policy trade-offs
+## RQ2 — Policy trade-off
 
-What trade-offs do alternative fraud-management policies create among fraud loss, detection performance, false positives, customer friction and analyst workload?
+Các fraud-management policies tạo trade-off thế nào giữa:
+- fraud loss;
+- detection;
+- false positive;
+- customer friction;
+- analyst workload?
 
 ## RQ3 — Operational robustness
 
-How do analyst capacity and uncertain behavioral/operational parameters affect the robustness of policy conclusions?
+Analyst capacity và các parameter/mechanism bất định làm thay đổi policy conclusion thế nào?
 
-## Research objective
+## Mục tiêu nghiên cứu
 
-Build an empirically grounded ABM / dynamic policy-simulation framework for controlled counterfactual experiments.
+Xây một ABM / dynamic policy-simulation framework có empirical grounding để chạy counterfactual experiments.
 
-## Contribution target
+## Đóng góp dự kiến
 
-The intended contribution is **not** a new classifier or a claim that adaptive fraudsters have never been studied before.
+Đề tài **không** nhằm:
+- đề xuất classifier mới;
+- claim adaptive fraudster là ý tưởng chưa từng có.
 
-The contribution target is a closed-loop experimental framework combining:
+Đóng góp hướng tới một closed-loop framework kết hợp:
 
-- heterogeneous/persistent transaction actors;
-- adaptive fraudster behavior;
-- a fraud-risk/detection system;
-- an alert queue;
+- persistent customer/fraud state;
+- adaptive fraudster;
+- risk/detection system;
+- alert queue;
 - limited analyst capacity;
 - alternative fraud-management policies;
-- repeated stochastic simulation and sensitivity analysis.
+- repeated stochastic simulation;
+- sensitivity / structural robustness.
 
-## Expected metrics
+## Metrics
 
 ### Fraud / detection
 - fraud detection rate;
@@ -58,23 +83,36 @@ The contribution target is a closed-loop experimental framework combining:
 - successful fraud value;
 - prevented fraud value.
 
-### Customer impact
+### Customer
 - false-positive rate;
 - challenge/review rate;
-- optional friction/abandonment proxy.
+- friction proxy nếu đủ grounding.
 
 ### Operations
 - queue length;
 - backlog;
-- review waiting time;
+- waiting time;
 - analyst utilization.
 
 ### Economics
 - fraud loss;
 - review cost;
-- false-positive/friction cost;
-- total cost when cost assumptions are explicitly declared.
+- false-positive / friction cost;
+- total cost nếu cost assumptions được công khai rõ.
 
-## Scope discipline
+## Scope hiện tại
 
-Core implementation should remain small enough to verify and defend. IEEE-CIS and Xente are the two current empirical scenarios. Nedbank and AMLSim/Libra are treated as possible future extensions unless the supervisor explicitly requests a broader scope.
+Core:
+- IEEE-CIS scenario;
+- Xente scenario;
+- adaptive fraudster;
+- alert queue;
+- analyst capacity;
+- fixed / cost-sensitive / capacity-aware policy;
+- sensitivity and robustness.
+
+Nedbank và AMLSim/Libra không phải core dependency ở giai đoạn này.
+
+## Giới hạn
+
+Không claim mô hình đại diện chính xác một ngân hàng hay hệ thống thực tế cụ thể. Kết luận phải mang tính điều kiện theo data, scenario, model structure và parameter range đã thử.
