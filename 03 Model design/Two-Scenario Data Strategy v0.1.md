@@ -1,63 +1,68 @@
-# Two-Scenario Data Strategy v0.1
+# Chiến lược dữ liệu hai scenario v0.1
 
-## Principle
+## Nguyên tắc
 
-Use one conceptual ABM framework but parameterize separate empirical environments.
+Dùng **một conceptual framework chung**, nhưng parameterize các empirical environment riêng.
 
-Do **not** merge IEEE-CIS and Xente into a single synthetic "bank".
+Không merge IEEE-CIS và Xente thành một “ngân hàng tổng hợp”.
 
 ## Scenario A — IEEE-CIS Fraud Detection
 
-Role:
-- online/card/e-commerce empirical environment;
-- transaction amount and temporal patterns;
+Vai trò:
+- online/card/e-commerce environment;
+- transaction amount / timing;
 - fraud labels;
-- card/device/identity-related observable features;
-- training a scenario-specific risk model.
+- card/device/identity context;
+- train scenario-specific risk model.
 
-Important limitation:
-- many variables are anonymized;
-- TransactionDT is relative time, not a real timestamp;
-- direct behavioral interpretation of hidden variables must be avoided.
+Giới hạn:
+- nhiều feature bị anonymized;
+- TransactionDT là relative time;
+- không có true customer identifier rõ ràng;
+- không được diễn giải hidden variables như hành vi thật nếu không có evidence.
 
 ## Scenario B — Xente Fraud Detection
 
-Role:
-- mobile/payment/e-commerce empirical environment;
-- amount/value distribution;
-- product/category/channel/provider information;
+Vai trò:
+- mobile/payment/e-commerce environment;
+- Amount/Value;
+- product/category/channel/provider;
 - fraud labels;
+- customer repetition;
 - scenario-specific risk model.
 
-Permission status:
-Zindi has explicitly confirmed thesis use is permitted with attribution and acknowledgement.
+Permission:
+Zindi đã xác nhận cho phép dùng cho thesis với attribution và acknowledgement.
 
-## Cross-scenario question
+## Câu hỏi cross-scenario
 
-The study does not require a single classifier to transfer directly between the datasets.
+Không yêu cầu một classifier duy nhất transfer trực tiếp giữa hai dataset.
 
-Instead:
+Câu hỏi đúng hơn là:
 
-> Does the same policy-experimentation framework produce qualitatively robust conclusions when independently parameterized in two distinct transaction environments?
+> Khi cùng một policy-experimentation framework được parameterize độc lập trên hai môi trường khác nhau, các kết luận system-level có còn tương tự/robust không?
 
-## What the datasets can support
+## Dataset ground được gì?
 
-Potentially empirical:
+Có thể empirical:
 - fraud prevalence;
-- amount distributions;
+- amount distribution;
 - observable temporal/channel patterns;
-- scenario-specific predictive risk model performance.
+- scenario-specific risk score;
+- một số customer/history state nếu identifier cho phép.
 
-Not directly identified:
+Không được data identify trực tiếp:
 - analyst capacity;
 - analyst review time;
 - analyst accuracy;
-- customer friction cost;
+- false-positive/friction cost;
 - fraudster learning rate;
-- strategy-switch cognition.
+- fraudster cognition/strategy-switch rule.
 
-These require literature, plausible ranges or explicit assumptions.
+Những phần này phải dựa vào literature, plausible ranges hoặc explicit assumptions.
 
-## Deferred data sources
+## Dataset khác
 
-Nedbank and AMLSim/Libra are not core dependencies in the current scope. They may be considered later as external/future scenarios after the two core environments are complete.
+Nedbank và AMLSim/Libra hiện không phải core dependency.
+
+Chỉ mở rộng sau khi hai scenario chính đã hoàn thành và scope cho phép.
