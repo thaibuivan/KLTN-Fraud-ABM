@@ -1,68 +1,63 @@
-# Chiến lược dữ liệu hai scenario v0.1
+# Two-Scenario Data Strategy v0.1 — trạng thái sau khi thu gọn scope
 
-## Nguyên tắc
+## Status
 
-Dùng **một conceptual framework chung**, nhưng parameterize các empirical environment riêng.
+**Xente là core development environment. IEEE-CIS là optional external robustness.**
 
-Không merge IEEE-CIS và Xente thành một “ngân hàng tổng hợp”.
+File này không còn có nghĩa hai dataset bắt buộc phải hoàn thành ngang nhau.
 
-## Scenario A — IEEE-CIS Fraud Detection
+## Vì sao thu gọn?
+
+KLTN đang phát triển trực tiếp từ đề án FinRisk.
+
+Để hoàn thành contribution chính, cần trước hết đóng vòng đầy đủ:
+
+```text
+Xente transaction state
+→ risk
+→ policy
+→ queue/analyst
+→ outcome
+→ adaptive fraudster feedback
+```
+
+Nếu chia effort sang hai dataset trước khi vòng này hoàn chỉnh, scope tăng mạnh nhưng RQ chính chưa được trả lời.
+
+## Scenario A — Xente (CORE)
 
 Vai trò:
-- online/card/e-commerce environment;
-- transaction amount / timing;
-- fraud labels;
-- card/device/identity context;
-- train scenario-specific risk model.
+- empirical transaction chronology;
+- repeated CustomerId;
+- customer-history state;
+- risk-model training/evaluation;
+- queue/policy replay;
+- empirical grounding cho counterfactual fraud generation.
+
+## Scenario B — IEEE-CIS (OPTIONAL)
+
+Vai trò nếu thời gian cho phép:
+- online/card/e-commerce-like robustness environment;
+- kiểm tra qualitative policy conclusions có phụ thuộc mạnh vào Xente hay không.
 
 Giới hạn:
-- nhiều feature bị anonymized;
+- many anonymized features;
 - TransactionDT là relative time;
-- không có true customer identifier rõ ràng;
-- không được diễn giải hidden variables như hành vi thật nếu không có evidence.
+- true persistent customer identity kém rõ hơn Xente.
 
-## Scenario B — Xente Fraud Detection
+## Câu hỏi cross-scenario nếu triển khai
 
-Vai trò:
-- mobile/payment/e-commerce environment;
-- Amount/Value;
-- product/category/channel/provider;
-- fraud labels;
-- customer repetition;
-- scenario-specific risk model.
+> Khi cùng một policy framework được parameterize độc lập ở Xente và IEEE-CIS, qualitative policy conclusions có giữ được không?
 
-Permission:
-Zindi đã xác nhận cho phép dùng cho thesis với attribution và acknowledgement.
+Không yêu cầu:
+- merge datasets;
+- transfer cùng một classifier;
+- hoàn thành IEEE để core thesis hợp lệ.
 
-## Câu hỏi cross-scenario
+## Quyết định thực thi
 
-Không yêu cầu một classifier duy nhất transfer trực tiếp giữa hai dataset.
-
-Câu hỏi đúng hơn là:
-
-> Khi cùng một policy-experimentation framework được parameterize độc lập trên hai môi trường khác nhau, các kết luận system-level có còn tương tự/robust không?
-
-## Dataset ground được gì?
-
-Có thể empirical:
-- fraud prevalence;
-- amount distribution;
-- observable temporal/channel patterns;
-- scenario-specific risk score;
-- một số customer/history state nếu identifier cho phép.
-
-Không được data identify trực tiếp:
-- analyst capacity;
-- analyst review time;
-- analyst accuracy;
-- false-positive/friction cost;
-- fraudster learning rate;
-- fraudster cognition/strategy-switch rule.
-
-Những phần này phải dựa vào literature, plausible ranges hoặc explicit assumptions.
-
-## Dataset khác
-
-Nedbank và AMLSim/Libra hiện không phải core dependency.
-
-Chỉ mở rộng sau khi hai scenario chính đã hoàn thành và scope cho phép.
+Thứ tự:
+1. full Xente model;
+2. final Xente experiment;
+3. Xente sensitivity;
+4. final writing draft;
+5. chỉ sau đó mới quyết định IEEE-CIS replication.
