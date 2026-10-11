@@ -1,106 +1,141 @@
 # KLTN Dashboard
 
 ## Current thesis direction
-Phát triển từ pilot `FinRisk-ABM-Policy-Simulation` thành một **empirically grounded, uncertainty-aware dynamic fraud-policy simulation/ABM**.
 
-## Decisions locked
-- **Primary dataset:** Xente Fraud Detection.
-- **Primary stateful entity:** `CustomerId`.
-- **Baseline data mode:** chronological observed-event replay.
-- **Simulation clock:** event-driven.
-- **AccountId / SubscriptionId:** context identifiers/features, not separate agents.
-- **Baseline risk engine:** regularized logistic regression first.
-- **Core operational mechanism:** persistent alert queue.
-- **First structural comparison:** FIFO vs risk-priority.
-- **Capacity representation:** relative/fixed pooled capacity experiments, not invented analysts/day.
-- **IEEE-CIS:** optional external robustness, not second full ABM.
+**Current framing (2026-10-11):**
 
-## Current milestone
-**Freeze core MVP after robustness + structural validation.**
+> Dùng ABM như một môi trường thử nghiệm/stress-test chính sách quản lý gian lận giao dịch, trong đó fraudster có khả năng thích nghi với phản hồi hệ thống và fraud analyst có năng lực review hữu hạn.
 
-### Completed
-1. [[Data Audit]] ✅
-2. [[Xente Empirical Profile]] ✅
-3. Leakage-safe customer features ✅
-4. Logistic baseline feasibility ✅
-5. Literature grounding for analyst/capacity/cost ✅
-6. Persistent queue simulator ✅
-7. [[Xente Queue Pilot v0.1]] ✅
-8. Seen vs cold-start analysis ✅
-9. Expanding-window temporal robustness ✅
-10. Risk-model structural sensitivity ✅
-11. Stochastic service-time robustness over 100 seeds ✅
-12. Fixed-capacity alert-threshold sensitivity ✅
-13. Starvation/service-equity diagnostics ✅
-14. Queue verification tests: **5 passed** ✅
-15. Practitioner validation question guide drafted ✅
-16. GVHD milestone update drafted ✅
-17. [[Xente Variable Team Capacity Sensitivity v0.1]] ✅
-18. [[Core Experiment Grid v0.1]] drafted ✅
-19. [[Candidate Core Specification v0.3]] drafted ✅
+### Main RQ
 
-## Literature
-- [[AML-CFSim 2025]]
-- [[McCulloch 2022]]
-- [[Alves et al 2025 - OpenL2D FiFAR]]
-- [[Hoppner et al 2022 - Cost-sensitive transfer fraud]]
-- [[Real bank AML alert scoring 2025]]
+> **How do alternative transaction-fraud management policies perform under adaptive fraudster behavior and analyst capacity constraints?**
 
-## Design
+## What is current vs superseded
+
+### Current master documents
+- [[Current Direction - 2026-10-11]]
+- [[Research Design v1.0 - Policy Experimentation]]
+- [[Conceptual Model v1.0 - Adaptive Policy ABM]]
+- [[Parameter Registry v0.2]]
+- [[Two-Scenario Data Strategy v0.1]]
+- [[Adaptive Policy Experiment Plan v0.1]]
+- [[GVHD Brief - Current Direction 2026-10-11]]
+
+### Earlier Xente-only direction
+The older Xente queue/capacity documents are **not deleted**, because they contain real completed work, code, diagnostics and pilot results.
+
+However, files such as:
 - [[Research Design v0.2]]
-- [[Conceptual Model v0.2]]
-- [[Data Audit]]
-- [[Evidence Parameter Matrix]]
-- [[Operational Parameter Grounding v0.1]]
-- [[Queue and Analyst Service Design v0.1]]
-- [[Validation Plan v0.1]]
-- [[Core Experiment Grid v0.1]]
 - [[Candidate Core Specification v0.3]]
+- [[Core Experiment Grid v0.1]]
+- [[Conceptual Model v0.2]]
+- [[GVHD Update - Xente Queue Milestone]]
 
-## Experiments
-- [[Xente Baseline Risk Model Feasibility]]
-- [[Xente Queue Pilot v0.1]]
-- [[Xente Robustness Pack v0.1]]
-- [[Xente Alert-rate and Starvation Sensitivity v0.1]]
-- [[Xente Variable Team Capacity Sensitivity v0.1]]
+are **superseded as project framing**.
 
-## Current robust insight
-Across tested Xente score streams:
-- scarce service capacity creates backlog/delay;
-- threshold changes can create overload under fixed staffing;
-- risk-priority reallocates scarce service toward high-risk alerts;
-- fraud capture within a finite horizon generally increases relative to FIFO;
-- tail waiting/starvation for lower-priority alerts worsens;
-- the qualitative result persists after removing current-Value features;
-- the result persists under stochastic service times;
-- the result also persists under day-level variable team capacity.
+Use them only to understand the previous Xente-only queue design or to reuse validated mechanisms.
 
-This is a **conditional simulation result**, not a universal policy recommendation.
+See [[Repo Audit - 2026-10-11]].
 
-## Important caution
-Xente has unusually strong transaction-Value/context signal.
+## Work already completed
 
-The amount-only baseline is nearly as strong as the full logistic model on the final test period.
+### A. Xente empirical groundwork
+- Data audit completed.
+- 95,662 labelled Xente transactions profiled.
+- 193 fraud cases verified.
+- 3,742 CustomerIds verified.
+- Customer repetition and cold-start patterns documented.
+- Strong Value/context signal documented.
+- Leakage-safe past-only customer features implemented.
 
-Therefore:
-- classifier novelty is not the contribution;
-- policy conclusions must be reported across time/model structures;
-- final-test PR-AUC is not treated as stable production performance.
+### B. Risk baseline
+- Chronological 70/15/15 split implemented.
+- Regularized logistic risk model implemented.
+- Temporal instability checked.
+- Full / no-current-value / amount-only score structures compared.
 
-## Current blockers
-- practitioner validation has been drafted but not yet conducted;
-- transaction-fraud review-time range remains weakly grounded;
-- recovery/delay-to-loss mechanism is not identified;
-- false-positive/customer-friction monetary value is context-specific;
-- alert aging/expiry rule is not yet justified.
+### C. Operational queue module
+- Persistent event-driven alert queue implemented.
+- FIFO and risk-priority implemented.
+- Relative/fixed pooled capacity experiments implemented.
+- Alert-threshold overload sensitivity implemented.
+- Stochastic service-time sensitivity implemented.
+- Variable team-capacity sensitivity implemented.
+- Starvation/tail-wait diagnostics implemented.
+- Queue verification tests implemented.
 
-## Next priorities
-1. Conduct practitioner structural validation using [[Practitioner Validation Questions v0.1]].
-2. Ask GVHD the five decisions in [[GVHD Update - Xente Queue Milestone]].
-3. Review [[Candidate Core Specification v0.3]] and [[Core Experiment Grid v0.1]] with GVHD.
-4. Based on feedback, decide whether to add hybrid aging/expiry or a cost-sensitive monetary layer.
-5. Freeze core mechanisms and final experiment grid.
-6. Then write Methodology from the frozen implementation.
+### D. Current ABM direction
+- Current Research Design v1.0 drafted.
+- Two-scenario strategy drafted: IEEE-CIS + Xente.
+- Adaptive fraudster mechanism specified.
+- Static-vs-adaptive smoke-test prototype implemented.
+- Parameter Registry v0.2 drafted.
+- Current supervisor brief drafted.
 
-## Rule
-Không làm LLM, fraudster cognition hoặc dashboard trước khi core mechanism được freeze.
+## Current conceptual model
+
+```text
+Customer --------\
+                  \
+                   -> Transactions -> Detection System -> APPROVE
+Adaptive Fraudster/                           |           -> STEP-UP
+                                             |           -> REVIEW -> Alert Queue -> Analyst
+                                             |           -> BLOCK
+                                             |
+                                             +--> system response
+                                                    |
+                                                    v
+                                            fraudster adaptation
+```
+
+### Feedback loops
+
+1. **Adversarial loop:** action -> system response -> learning/adaptation -> next action.
+2. **Operational loop:** policy -> alerts -> queue/backlog -> review delay/capacity -> system outcomes.
+
+## Current data strategy
+
+### Scenario A
+IEEE-CIS — online/card/e-commerce environment.
+
+### Scenario B
+Xente — mobile/payment/e-commerce environment.
+
+The two datasets are not merged.
+
+## Current policy families
+
+1. Fixed-threshold policy.
+2. Cost-sensitive policy.
+3. Capacity-aware policy.
+
+## Core experiments
+
+1. Static vs adaptive fraudster.
+2. Policy comparison.
+3. Analyst-capacity stress test.
+
+## Parameter philosophy
+
+Do not search for one "true" value for every parameter.
+
+Classify each parameter as:
+- empirical;
+- literature-informed;
+- policy variable;
+- uncertain behavioral assumption.
+
+Sensitivity-test uncertain parameters and mechanisms.
+
+## Immediate blockers / open decisions
+
+- GVHD confirmation of the final framing.
+- Final decision on exact policy definitions.
+- IEEE-CIS detailed audit for the current two-scenario framework.
+- Final mapping from dataset variables to ABM states/parameters.
+- Public grounding for adaptive-fraudster mechanisms where possible.
+- Final decision on how much customer-friction/cost monetization to include.
+
+## Immediate reading order
+
+Open [[READING ORDER]].
