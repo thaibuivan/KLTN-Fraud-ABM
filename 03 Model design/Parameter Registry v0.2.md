@@ -1,51 +1,74 @@
 # Parameter Registry v0.2
 
-The main methodological task is not to find one "true" number for every parameter. It is to separate parameters by evidential status and test robustness where exact identification is impossible.
+## Nguyên tắc
 
-| Parameter | Meaning | Initial source class | Role | Sensitivity priority |
+Mục tiêu không phải tìm một “con số đúng tuyệt đối” cho mọi parameter.
+
+Quan trọng hơn là xác định **parameter thuộc loại evidence nào** và có cần sensitivity-test hay không.
+
+| Parameter | Ý nghĩa | Nguồn ban đầu | Vai trò | Ưu tiên sensitivity |
 |---|---|---|---|---|
-| fraud prevalence | share of fraud transactions | empirical dataset | calibration/input | low-medium |
-| amount distribution | transaction-value distribution | empirical dataset | calibration/input | low |
-| temporal distribution | transaction timing pattern | empirical dataset | calibration/input | medium |
-| customer transaction frequency | activity rate/history | empirical if identifiable | state/input | medium |
-| risk threshold | action threshold | experiment | policy variable | high |
-| queue discipline | FIFO / risk-priority / other | experiment | policy variable | high |
-| analyst capacity | cases processed per period | literature/scenario | operational uncertainty | high |
-| review time | time per case | literature/scenario | operational uncertainty | high |
-| analyst accuracy | review correctness | literature/scenario | operational uncertainty | medium-high |
-| fraudster learning rate alpha | adaptation speed | explicit behavioral assumption | behavioral uncertainty | high |
-| exploration epsilon | probability of trying alternatives | explicit behavioral assumption | behavioral uncertainty | high |
-| strategy-switch mechanism | adaptation rule | model design | structural uncertainty | high |
-| block tolerance | repeated blocks before dormancy | explicit assumption | behavioral uncertainty | high |
-| dormancy duration | inactive period after repeated blocks | explicit assumption | behavioral uncertainty | medium |
-| review cost | analyst handling cost | literature/scenario | economic uncertainty | medium |
-| false-positive cost | cost of unnecessary intervention | literature/scenario | economic uncertainty | high |
-| friction cost | customer inconvenience/abandonment proxy | literature/scenario | economic uncertainty | high |
+| fraud prevalence | tỷ lệ fraud | dataset | empirical input | thấp-vừa |
+| amount distribution | phân bố giá trị GD | dataset | empirical input | thấp |
+| temporal distribution | phân bố theo thời gian | dataset | empirical input | vừa |
+| customer transaction frequency | mức độ hoạt động | dataset nếu xác định được | state/input | vừa |
+| risk threshold | ngưỡng action | experiment | policy variable | cao |
+| queue discipline | FIFO / risk-priority | experiment | policy variable | cao |
+| analyst capacity | số case xử lý mỗi period | literature/scenario | operational uncertainty | cao |
+| review time | thời gian xử lý case | literature/scenario | operational uncertainty | cao |
+| analyst accuracy | độ chính xác review | literature/scenario | operational uncertainty | vừa-cao |
+| fraudster learning rate alpha | tốc độ học | explicit assumption | behavioral uncertainty | cao |
+| exploration epsilon | xác suất thử strategy khác | explicit assumption | behavioral uncertainty | cao |
+| strategy-switch mechanism | rule thích nghi | model design | structural uncertainty | cao |
+| block tolerance | số block trước dormancy | explicit assumption | behavioral uncertainty | cao |
+| dormancy duration | thời gian ngủ đông | explicit assumption | behavioral uncertainty | vừa |
+| review cost | chi phí xử lý | literature/scenario | economic uncertainty | vừa |
+| false-positive cost | chi phí can thiệp nhầm | literature/scenario | economic uncertainty | cao |
+| friction cost | customer inconvenience / abandonment proxy | literature/scenario | economic uncertainty | cao |
 
-## Four parameter classes
+## Bốn nhóm parameter
 
-### 1. Empirical parameters
-Estimated directly where the dataset supports identification.
+### 1. Empirical parameter
+Estimate trực tiếp nếu dataset hỗ trợ.
 
-Examples: fraud prevalence, amount distribution, observable timing patterns.
+Ví dụ:
+- fraud prevalence;
+- amount distribution;
+- observable timing;
+- channel/product mix.
 
-### 2. Literature-informed operational parameters
-Public evidence or plausible ranges.
+### 2. Literature-informed operational parameter
+Dùng public literature hoặc plausible range.
 
-Examples: analyst capacity, review time, analyst accuracy.
+Ví dụ:
+- analyst capacity;
+- review time;
+- analyst accuracy.
 
-### 3. Policy parameters
-Not estimated because they are intentionally manipulated.
+### 3. Policy parameter
+Không cần estimate vì chính nó là biến thí nghiệm.
 
-Examples: risk thresholds, queue-priority rule, capacity-aware decision rule.
+Ví dụ:
+- threshold;
+- queue rule;
+- capacity-aware decision rule.
 
-### 4. Uncertain behavioral assumptions
-Not directly identified by transaction datasets.
+### 4. Uncertain behavioral assumption
+Không được transaction data identify trực tiếp.
 
-Examples: fraudster learning rate, exploration rate, switching threshold and dormancy.
+Ví dụ:
+- fraudster learning rate;
+- exploration;
+- switching threshold;
+- dormancy.
 
-These must be reported transparently and stress-tested.
+Các parameter này phải được báo cáo minh bạch và sensitivity-test.
 
-## Key methodological principle
+## Quy tắc quan trọng
 
-Do not calibrate an unobservable behavioral mechanism as if it were directly observed. If the data do not identify a parameter, treat it as uncertain rather than inventing false precision.
+Nếu data không identify được parameter, **không được tạo false precision**.
+
+Hãy ghi rõ:
+- assumption;
+- plausible range;
+- sensitivity result.
