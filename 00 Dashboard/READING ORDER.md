@@ -1,45 +1,44 @@
-# THỨ TỰ ĐỌC REPO — đọc ít nhưng đúng thứ tự
+# THỨ TỰ ĐỌC REPO — giai đoạn hoàn thiện KLTN
 
-Mục tiêu của file này là giúp bạn **không bị loạn** khi repo có nhiều file do các vòng làm việc trước tạo ra.
+Không đọc repo theo folder. Đọc theo research pipeline.
 
-## Nếu chỉ có 10–15 phút
+## 1. Hiểu KLTN phát triển từ đề án như thế nào
 
-Chỉ đọc 4 file:
+1. [[De an to KLTN - Development Map]]
+2. [[Current Direction - 2026-10-11]]
+3. [[Research Design v1.1 - Develop from FinRisk Proposal]]
 
-1. [[Current Direction - 2026-10-11]]
-2. [[Research Design v1.0 - Policy Experimentation]]
-3. [[Conceptual Model v1.0 - Adaptive Policy ABM]]
-4. [[GVHD Brief - Current Direction 2026-10-11]]
+Sau ba file này phải trả lời được:
+- KLTN giữ gì từ đề án?
+- nâng cấp gì?
+- RQ chính là gì?
+- Xente dùng ở đâu?
+- adaptive fraudster dùng để làm gì?
 
-Đọc xong 4 file này phải tự trả lời được:
+## 2. Hiểu full model
 
-- Tôi nghiên cứu vấn đề gì?
-- Vì sao dùng ABM?
-- Data nào dùng?
-- Fraudster thích nghi ở đâu?
-- Policy nào được thử?
-- Sản phẩm cuối là gì?
+4. [[Xente Full Model Specification v1.0]]
+5. [[Parameter Registry v0.2]]
+6. [[Adaptive Fraudster Design v0.1]]
+7. [[Queue and Analyst Service Design v0.1]]
+8. [[Validation Plan v1.0]]
 
-## Khi đã hiểu hướng, đọc methodology
+## 3. Hiểu thí nghiệm cuối
 
-Theo thứ tự:
+9. [[Final Core Experiment Grid v1.0]]
 
-1. [[Two-Scenario Data Strategy v0.1]]
-2. [[Parameter Registry v0.2]]
-3. [[Adaptive Fraudster Design v0.1]]
-4. [[Queue and Analyst Service Design v0.1]]
-5. [[Operational Parameter Grounding v0.1]]
-6. [[Validation Plan v0.1]]
+Core:
 
-Mục tiêu là hiểu:
-- cái gì lấy được từ data;
-- cái gì phải lấy từ literature;
-- cái gì chỉ là assumption;
-- cái gì chính là biến policy để thử nghiệm.
+```text
+Static / Adaptive
+×
+Fixed / Capacity-aware
+×
+Low / Medium / High capacity
+= 12 configurations
+```
 
-## Sau đó mới đọc những gì đã làm thật trên Xente
-
-Theo thứ tự:
+## 4. Sau đó mới đọc evidence Xente đã hoàn thành
 
 1. [[Xente Empirical Profile]]
 2. [[Xente Baseline Risk Model Feasibility]]
@@ -48,9 +47,9 @@ Theo thứ tự:
 5. [[Xente Alert-rate and Starvation Sensitivity v0.1]]
 6. [[Xente Variable Team Capacity Sensitivity v0.1]]
 
-Đây là **pilot/groundwork cho Xente scenario**, không phải full result của adaptive-ABM hiện tại.
+Các file này là empirical/operational groundwork, chưa phải final adaptive-ABM result.
 
-## Đọc code theo pipeline
+## 5. Code pipeline
 
 ```text
 profile_xente.py
@@ -59,39 +58,24 @@ build_xente_features.py
     ↓
 train_xente_baseline.py
     ↓
+fraud_policies.py
+    ↓
 simulate_alert_queue.py
     ↓
 adaptive_fraudster.py
     ↓
-run_adaptive_vs_static.py
+[INTEGRATION ENGINE — next]
 ```
 
-Mỗi file chỉ cần trả lời bốn câu:
-- Input là gì?
-- Nó xử lý gì?
-- Output là gì?
-- Assumption quan trọng nhất là gì?
-
-Không cần thuộc từng dòng code.
-
-## File KHÔNG nên đọc đầu tiên
-
-Các file sau phản ánh hướng cũ Xente-only và đã bị superseded về framing:
+## File cũ không dùng làm source of truth
 
 - [[Research Design v0.2]]
+- [[Research Design v1.0 - Policy Experimentation]]
 - [[Candidate Core Specification v0.3]]
 - [[Core Experiment Grid v0.1]]
 - [[Conceptual Model v0.2]]
-- [[GVHD Update - Xente Queue Milestone]]
+- [[Validation Plan v0.1]]
 - [[Methodology Skeleton v0.1]]
 - [[Results and Discussion Outline v0.1]]
 
-Chúng vẫn hữu ích để truy lịch sử hoặc lấy lại mechanism, nhưng **không dùng để học hướng hiện tại**.
-
-## File lịch sử
-
-- [[Legacy Project Audit - FinRisk]]
-- [[Legacy Migration Map]]
-- [[Prototype-to-Thesis Gap]]
-
-Chỉ đọc khi muốn biết dự án đi từ prototype cũ tới KLTN hiện tại như thế nào.
+Giữ để truy lịch sử hoặc tái sử dụng nội dung; không dùng để quyết định scope hiện tại.
