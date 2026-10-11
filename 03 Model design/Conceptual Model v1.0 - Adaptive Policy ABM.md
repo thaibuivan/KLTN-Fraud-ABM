@@ -1,43 +1,47 @@
-# Conceptual Model v1.0 — Adaptive Policy ABM
+# Conceptual Model v1.0 — ABM thử nghiệm policy với fraudster thích nghi
 
-## Model purpose
+## Mục đích của mô hình
 
-The model is a **policy experimentation / stress-testing environment**.
+Mô hình được dùng như một **môi trường thử nghiệm / stress-test chính sách**.
 
-It is not designed to reproduce one real bank exactly.
+Nó không nhằm tái tạo chính xác một ngân hàng cụ thể.
 
-## Core entities and modules
+## Các thành phần chính
 
 ### Customer agent
-Persistent state may include:
-- transaction history;
-- recent frequency/velocity;
-- recent amount statistics;
-- channel/product history;
-- accumulated intervention/friction state if needed by an RQ.
+
+State có thể gồm:
+- lịch sử giao dịch;
+- transaction frequency / velocity;
+- thống kê amount gần đây;
+- product/channel history;
+- accumulated friction nếu thật sự cần cho RQ.
 
 Action:
-- generate or replay legitimate transactions.
+- sinh hoặc replay giao dịch hợp lệ.
 
 ### Fraudster agent
-Persistent state:
-- current strategy;
-- strategy values/preferences;
-- recent success;
+
+State:
+- strategy hiện tại;
+- strategy value / preference;
+- recent success rate;
 - recent system responses;
-- repeated-block counter;
-- optional dormancy state.
+- consecutive-block counter;
+- dormancy state nếu dùng.
 
 Action:
-- choose a strategy and generate a fraud transaction.
+- chọn strategy;
+- tạo fraud transaction.
 
 Adaptation:
-- observe APPROVE / STEP-UP / REVIEW / BLOCK;
-- update strategy preference;
-- alter future behavior.
+- quan sát APPROVE / STEP-UP / REVIEW / BLOCK;
+- cập nhật preference;
+- thay đổi hành vi tương lai.
 
 ### Detection system
-A component/module rather than necessarily an agent.
+
+Đây có thể là module thay vì agent.
 
 Input:
 - transaction features;
@@ -45,10 +49,11 @@ Input:
 
 Output:
 - fraud-risk score;
-- rule triggers if rule layer is used.
+- rule trigger nếu có rule layer.
 
 ### Policy layer
-Maps current information to an action.
+
+Biến risk/state thành action.
 
 Candidate actions:
 - APPROVE;
@@ -56,35 +61,35 @@ Candidate actions:
 - REVIEW;
 - BLOCK.
 
-Candidate policy families:
+Candidate policies:
 1. fixed threshold;
 2. cost-sensitive;
 3. capacity-aware.
 
 ### Alert queue
-Persistent state:
-- alert arrivals;
+
+State:
+- alert arrival;
 - priority;
 - waiting time;
 - backlog;
 - service status.
 
-Candidate queue disciplines:
+Queue rule:
 - FIFO;
 - risk-priority;
-- later hybrid/aging only if justified.
+- hybrid/aging chỉ thêm khi có lý do rõ.
 
 ### Fraud analyst
-Core abstraction:
-- pooled or agent-level review capacity;
+
+Baseline:
+- pooled review capacity;
 - service process;
-- review outcome if analyst decision error is modeled.
+- review outcome nếu sau này model analyst error.
 
-Individual analyst heterogeneity is not required for the first implementation.
+Không cần bắt đầu bằng từng analyst riêng biệt.
 
----
-
-## System flow
+## Luồng hệ thống
 
 ```text
 LEGITIMATE CUSTOMER
@@ -124,7 +129,7 @@ fraud transaction -------------+
         fraud loss / FP / workload / delay / cost
 ```
 
-## Adversarial feedback loop
+## Feedback loop 1 — adversarial
 
 ```text
 fraudster action
@@ -133,14 +138,14 @@ system response
       ↓
 reward / penalty
       ↓
-strategy-value update
+strategy update
       ↓
 future strategy choice
 ```
 
-This feedback loop is what turns adaptive fraudster behavior into a stress mechanism.
+Đây là cơ chế khiến fraudster trở thành adaptive stress mechanism.
 
-## Operational feedback loop
+## Feedback loop 2 — operational
 
 ```text
 policy threshold / action rule
@@ -151,79 +156,75 @@ queue / backlog
       ↓
 waiting time / service pressure
       ↓
-review outcomes and system metrics
+review outcome và system metrics
 ```
 
-A capacity-aware policy may additionally observe queue/capacity state before making the next action decision.
+Capacity-aware policy có thể quan sát queue/capacity state trước khi quyết định.
 
-## Simulation time
+## Thời gian mô phỏng
 
-The current preferred design is event-driven or fine-grained chronological processing because transaction ordering and queue waiting matter.
+Ưu tiên event-driven / chronological processing vì transaction order và queue waiting quan trọng.
 
-For Xente:
-- observed transaction replay can be used for the empirical baseline.
+### Với Xente
+Có thể dùng observed transaction replay làm empirical baseline.
 
-For counterfactual adaptive-fraudster experiments:
-- fraud events may be generated/perturbed while maintaining scenario-specific empirical distributions.
+### Với adaptive counterfactual
+Fraud events có thể được generated/perturbed nhưng vẫn phải bám scenario-specific distributions.
 
-For IEEE-CIS:
-- exact implementation depends on the final data audit because persistent customer identity is less directly observed.
+### Với IEEE-CIS
+Cách dựng persistent entity phụ thuộc final data audit vì customer identity kém trực tiếp hơn Xente.
 
-## State-transition view
+## Một event diễn ra như thế nào?
 
-At time/event t:
+1. Customer hoặc fraudster tạo transaction.
+2. Detection system tạo risk information.
+3. Policy chọn action.
+4. REVIEW tạo alert trong queue.
+5. Analyst capacity xử lý alert.
+6. Outcome được ghi nhận.
+7. Queue/customer/fraudster state được update.
+8. Chuyển sang event tiếp theo.
 
-1. Customer/fraudster produces a transaction.
-2. Detection system computes risk information.
-3. Policy selects an action.
-4. REVIEW action adds an alert to the persistent queue.
-5. Analyst capacity serves available alerts.
-6. Outcomes and metrics are recorded.
-7. Customer/queue/fraudster states update.
-8. Next event is processed.
+## Khi nào thật sự gọi là ABM?
 
-## Why this may justify ABM
-
-The ABM label is justified only if the final implementation retains:
+ABM framing hợp lý nếu implementation giữ được:
 - persistent agent state;
-- heterogeneous behavior;
-- feedback between actions and future behavior;
-- interaction through shared operational resources such as the queue.
+- behavioral heterogeneity;
+- feedback từ action sang future behavior;
+- interaction qua shared resource như queue.
 
-If adaptive behavior is removed and only a fixed empirical score stream is replayed through a queue, the more conservative label **dynamic/discrete-event policy simulation** remains valid.
+Nếu bỏ adaptive behavior và chỉ replay score stream cố định qua queue, tên **dynamic/discrete-event policy simulation** có thể chính xác hơn.
 
-## Minimum viable ABM
-
-Do not begin with all complexity.
+## Minimum viable model
 
 ### MVP 0
 Transaction -> risk -> policy -> queue -> analyst -> metrics.
 
 ### MVP 1
-Add persistent customer state / empirical history.
+Thêm persistent customer state.
 
 ### MVP 2
-Add static fraudster comparator.
+Thêm static fraudster.
 
 ### MVP 3
-Add adaptive fraudster.
+Thêm adaptive fraudster.
 
 ### MVP 4
-Compare policy families.
+So sánh policy.
 
 ### MVP 5
-Sensitivity and robustness.
+Sensitivity + robustness.
 
-## Claim boundary
+## Giới hạn claim
 
-The model may support conditional statements about:
-- policy trade-offs;
+Chỉ được claim có điều kiện về:
+- policy trade-off;
 - congestion;
 - adaptation stress;
 - robustness.
 
-It must not claim:
+Không claim:
 - exact fraudster cognition;
-- a digital twin;
-- production thresholds;
-- bank-specific staffing requirements without evidence.
+- digital twin;
+- production threshold;
+- bank-specific staffing.
