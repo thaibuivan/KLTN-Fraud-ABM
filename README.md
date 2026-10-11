@@ -1,207 +1,107 @@
-# KLTN — Fraud Policy Simulation / ABM
+# KLTN — Fraud Policy Experimentation with ABM
 
-Research workspace for an undergraduate thesis on **transaction-fraud policy experimentation under limited review capacity and uncertainty**.
+Research workspace for an undergraduate thesis on **transaction-fraud policy experimentation under adaptive fraudster behavior and limited analyst capacity**.
 
-The project develops an earlier pilot, `FinRisk-ABM-Policy-Simulation`, into a more defensible empirical simulation using:
-- Xente Fraud Detection as the primary transaction stream;
+## Current thesis framing
+
+> Use Agent-Based Modelling (ABM) as a policy laboratory to stress-test alternative fraud-management policies in a dynamic environment where fraudsters can adapt to system feedback and fraud analysts have limited review capacity.
+
+The current project logic is:
+
+- **Research objective:** policy experimentation / stress testing.
+- **ABM:** research instrument.
+- **Adaptive fraudster:** stress mechanism.
+- **Alert queue + analyst capacity:** operational constraint and feedback mechanism.
+- **Risk model:** one component of the detection system, not the thesis contribution.
+- **Empirical grounding:** public fraud data + literature + explicit assumptions.
+
+## Start here
+
+Read in this order:
+
+1. `00 Dashboard/READING ORDER.md`
+2. `00 Dashboard/Current Direction - 2026-10-11.md`
+3. `03 Model design/Research Design v1.0 - Policy Experimentation.md`
+4. `03 Model design/Conceptual Model v1.0 - Adaptive Policy ABM.md`
+5. `03 Model design/Parameter Registry v0.2.md`
+6. `03 Model design/Two-Scenario Data Strategy v0.1.md`
+7. `05 Experiments/Adaptive Policy Experiment Plan v0.1.md`
+
+For supervisor discussion:
+- `04 Meetings/GVHD Brief - Current Direction 2026-10-11.md`
+
+## Empirical scenarios
+
+### Scenario A — IEEE-CIS
+Online/card/e-commerce fraud environment.
+
+### Scenario B — Xente
+Mobile/payment/e-commerce fraud environment.
+
+The datasets are **not merged**. Each independently parameterizes the same conceptual framework.
+
+## Work already completed before the current framing
+
+The repository contains a substantial Xente queue/capacity pilot from the earlier, narrower direction:
+
+- Xente data audit and empirical profiling;
 - leakage-safe customer-history features;
-- an interpretable fraud-risk baseline;
-- a persistent event-driven alert queue;
-- FIFO vs risk-priority review rules;
-- capacity/load stress tests;
-- temporal, model-structure and stochastic robustness checks.
+- chronological logistic risk baseline;
+- persistent alert queue;
+- FIFO vs risk-priority;
+- fixed/relative pooled capacity experiments;
+- threshold/load sensitivity;
+- stochastic service-time robustness;
+- variable team-capacity sensitivity;
+- automated queue verification tests.
 
-## Research focus
+These results are **not discarded**. They are treated as:
+1. empirical groundwork for the Xente scenario;
+2. a validated operational queue module;
+3. pilot evidence that policy/capacity mechanisms affect system outcomes.
 
-The thesis is not a classifier leaderboard study.
+However, older files that state "Xente only", "IEEE optional", or "do not model adaptive fraudster" are **superseded as project framing** and should not be read as the current research design.
 
-Core question:
+See:
+- `00 Dashboard/Repo Audit - 2026-10-11.md`
 
-> How do alert thresholds, review capacity and queue-priority rules interact to change fraud capture, backlog and waiting-time trade-offs?
+## Current prototype code
 
-The current methodological label is intentionally conservative:
-**dynamic fraud-policy simulation with agent-based/stateful components**.
+### Xente empirical / queue modules
+- `scripts/profile_xente.py`
+- `scripts/build_xente_features.py`
+- `scripts/train_xente_baseline.py`
+- `scripts/simulate_alert_queue.py`
+- robustness/sensitivity runners
 
-Whether the final thesis uses the stricter “ABM” label will depend on supervisor feedback and the final frozen mechanism set.
+### Adaptive fraudster prototype
+- `scripts/adaptive_fraudster.py`
+- `scripts/run_adaptive_vs_static.py`
+- `tests/test_adaptive_fraudster.py`
 
-## Current architecture
-
-```text
-Xente transaction stream
-        ↓
-past-only customer state/features
-        ↓
-risk engine
-        ↓
-alert policy / threshold
-        ↓
-persistent alert queue
-        ↓
-pooled review capacity
-        ↓
-FIFO or risk-priority service
-        ↓
-fraud capture / FP / backlog / waiting
-```
-
-## Primary data
-
-Primary dataset:
-**Xente Fraud Detection Challenge**.
-
-Raw competition files are intentionally **not committed**.
-
-Local layout:
-
-```text
-data/
-└── raw/
-    └── xente/
-        └── training.csv
-```
-
-`data/raw/` and row-level derived files are gitignored.
-
-## Setup
-
-```bash
-python -m venv .venv
-# Windows:
-.venv\Scripts\activate
-# macOS/Linux:
-# source .venv/bin/activate
-
-pip install -r requirements.txt
-```
-
-## Reproduce the current baseline
-
-### 1. Profile Xente
-
-```bash
-python scripts/profile_xente.py \
-  --input data/raw/xente/training.csv
-```
-
-### 2. Build past-only features
-
-```bash
-python scripts/build_xente_features.py \
-  --input data/raw/xente/training.csv \
-  --output data/interim/xente_features.csv
-```
-
-### 3. Train chronological logistic baseline
-
-```bash
-python scripts/train_xente_baseline.py \
-  --input data/interim/xente_features.csv \
-  --output-dir outputs/local/xente_baseline
-```
-
-### 4. Run persistent queue baseline
-
-```bash
-python scripts/simulate_alert_queue.py \
-  --validation-scores outputs/local/xente_baseline/validation_scores.csv \
-  --test-scores outputs/local/xente_baseline/test_scores.csv \
-  --target-alert-rate 0.01 \
-  --capacity-ratios 0.75,1.0,1.25
-```
-
-### 5. Run model-structure robustness
-
-```bash
-python scripts/run_xente_model_robustness.py \
-  --input data/interim/xente_features.csv
-```
-
-### 6. Run temporal robustness
-
-```bash
-python scripts/run_xente_temporal_robustness.py \
-  --input data/interim/xente_features.csv
-```
-
-### 7. Run fixed-staffing threshold sensitivity
-
-```bash
-python scripts/run_alert_rate_sensitivity.py \
-  --validation-scores outputs/local/xente_baseline/validation_scores.csv \
-  --test-scores outputs/local/xente_baseline/test_scores.csv \
-  --alert-rates 0.005,0.01,0.02,0.05 \
-  --reference-alert-rate 0.01 \
-  --capacity-ratios 0.75,1.0,1.25
-```
-
-### 8. Run variable team-capacity sensitivity
-
-```bash
-python scripts/run_variable_capacity_sensitivity.py \
-  --validation-scores outputs/local/xente_baseline/validation_scores.csv \
-  --test-scores outputs/local/xente_baseline/test_scores.csv \
-  --target-alert-rate 0.01 \
-  --reference-alert-rate 0.01 \
-  --requested-capacity-ratio 1.0 \
-  --team-capacity-cvs 0,0.3,0.6 \
-  --seeds 100
-```
-
-### 9. Verification
-
-```bash
-pytest -q
-```
-
-## Current design notes
-
-Start here:
-- `00 Dashboard/KLTN Dashboard.md`
-- `03 Model design/Candidate Core Specification v0.3.md`
-- `03 Model design/Core Experiment Grid v0.1.md`
-- `03 Model design/Validation Plan v0.1.md`
-- `03 Model design/Evidence Parameter Matrix.md`
-
-Current experiment notes:
-- `05 Experiments/Xente Queue Pilot v0.1.md`
-- `05 Experiments/Xente Robustness Pack v0.1.md`
-- `05 Experiments/Xente Alert-rate and Starvation Sensitivity v0.1.md`
-- `05 Experiments/Xente Variable Team Capacity Sensitivity v0.1.md`
-
-## Current claim boundary
-
-The repository may support conditional statements such as:
-
-> Under the evaluated Xente event streams and capacity/model structures, alert thresholds and queue disciplines change the allocation of scarce review capacity and create trade-offs among fraud capture, backlog and waiting-time distribution.
-
-It does **not** establish:
-- a production threshold for a bank;
-- a staffing level for a Vietnamese bank;
-- a universal best fraud policy;
-- realistic bank SLA waiting times;
-- exact analyst accuracy or fraud-recovery rates.
-
-## Legacy project
-
-The earlier `FinRisk-ABM-Policy-Simulation` repository is kept as a pilot/archive.
-
-Useful logic is migrated selectively; legacy assumptions are not treated as thesis evidence unless re-grounded.
+The adaptive runner is currently a **synthetic smoke test**, not a thesis result.
 
 ## Git workflow
 
-- `main`: accepted version.
-- `chatgpt-draft`: working changes prepared for review.
-
-Recommended:
-1. review the draft PR;
-2. merge only after methodology/scope decisions are accepted;
-3. pull to the local Obsidian vault.
+- `main`: accepted/stable version.
+- `chatgpt-draft`: active working branch for review before merge.
 
 ## Data and security
 
 Do not commit:
-- Xente raw competition files;
-- row-level restricted datasets;
-- API keys/tokens;
-- employer/confidential data;
-- proprietary bank information.
+- raw Xente / IEEE-CIS competition data;
+- row-level restricted data;
+- employer/internal data;
+- proprietary thresholds/rules;
+- API keys, passwords, tokens or secrets.
+
+## Claim boundary
+
+The project does not claim:
+- a digital twin of a bank;
+- a production-ready fraud system;
+- a universal optimal policy;
+- exact real-world fraudster cognition;
+- direct policy advice for a specific financial institution.
+
+Conclusions must remain conditional on the evaluated scenarios, assumptions and parameter ranges.
