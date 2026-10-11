@@ -1,37 +1,35 @@
-# Adaptive Fraudster Design v0.1
+# Thiết kế Adaptive Fraudster v0.1
 
-## Purpose
+## Mục đích
 
-The adaptive fraudster is a **stress mechanism for policy testing**, not the final research objective.
+Adaptive fraudster là **cơ chế stress-test policy**, không phải mục tiêu cuối cùng của đề tài.
 
-The fraudster observes system feedback and updates strategy preferences over time.
+Fraudster quan sát phản hồi của hệ thống rồi điều chỉnh strategy theo thời gian.
 
 ## State
 
-Possible state variables:
-
+Có thể gồm:
 - current strategy;
 - strategy value estimates;
 - recent success rate;
-- number of consecutive blocks;
-- recent system responses;
-- optional dormancy counter.
+- số lần block liên tiếp;
+- lịch sử phản hồi gần đây;
+- dormancy counter nếu dùng.
 
-## Actions
+## Action
 
-Abstract strategy set for the first prototype:
+Prototype ban đầu chỉ cần một số strategy trừu tượng:
 
-- low-amount / threshold-avoidance behavior;
-- high-amount behavior;
-- timing-shift behavior;
-- identity/card switching behavior.
+- low-amount / threshold-avoidance;
+- high-amount;
+- timing shift;
+- identity/card switching.
 
-Scenario-specific strategies should only be added when supported by public evidence or clearly labelled as assumptions.
+Chỉ thêm strategy đặc thù khi có public evidence hoặc ghi rõ là assumption.
 
-## Observations
+## Observation
 
 System response:
-
 - APPROVE;
 - CHALLENGE / STEP-UP;
 - REVIEW;
@@ -39,49 +37,57 @@ System response:
 
 ## Reward
 
-A simple interpretable form:
+Một dạng đơn giản, dễ giải thích:
 
 ```text
-APPROVE fraud  -> positive reward proportional to successful amount
-CHALLENGE      -> negative reward
-REVIEW         -> small/moderate negative reward
-BLOCK          -> larger negative reward
+APPROVE fraud  -> reward dương, có thể tỷ lệ theo amount
+CHALLENGE      -> penalty
+REVIEW         -> penalty nhỏ/vừa
+BLOCK          -> penalty lớn
 ```
 
 ## Learning rule
 
-First implementation should remain interpretable:
+Bản đầu nên dùng cơ chế dễ kiểm soát:
 
 ```math
 V_s^{new} = V_s^{old} + \alpha(r_t - V_s^{old})
 ```
 
-where:
-- `V_s` is the estimated value of strategy `s`;
-- `r_t` is observed reward;
-- `alpha` is the learning rate.
+Trong đó:
+- `V_s`: giá trị ước lượng của strategy s;
+- `r_t`: reward vừa quan sát;
+- `alpha`: learning rate.
 
-Strategy selection can use epsilon-greedy exploration.
+Strategy selection có thể dùng epsilon-greedy.
 
-Deep RL is not required for the minimum viable thesis model.
+Không cần Deep RL trong MVP.
 
-## Dormancy mechanism
+## Dormancy
 
-If the fraudster is blocked repeatedly, it may become dormant for a small number of simulation steps before returning.
+Nếu bị block liên tiếp vượt ngưỡng, fraudster có thể inactive vài bước rồi quay lại.
 
-This is a behavioral assumption unless independently grounded.
+Đây là behavioral assumption nếu không có independent evidence.
 
-## Parameter status
+## Parameter nào không được giả vờ là empirical?
 
-Parameters such as learning rate, exploration rate, block tolerance and dormancy duration are **not automatically identifiable from IEEE-CIS or Xente**.
+Các parameter sau thường không được IEEE-CIS/Xente xác định trực tiếp:
 
-They should be:
-- documented as behavioral assumptions;
-- varied over plausible ranges;
-- included in sensitivity analysis.
+- learning rate;
+- exploration rate;
+- consecutive-block tolerance;
+- dormancy duration;
+- strategy-switch rule.
+
+Do đó phải:
+- ghi rõ là assumption;
+- chọn plausible ranges;
+- sensitivity-test.
 
 ## Static comparator
 
-The static-fraudster baseline uses a fixed strategy and does not update strategy values.
+Static fraudster:
+- dùng fixed strategy;
+- không update strategy value.
 
-Experiment 1 compares static and adaptive behavior under otherwise identical conditions.
+Experiment 1 so sánh static vs adaptive dưới cùng các điều kiện khác.
