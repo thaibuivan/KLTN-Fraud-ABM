@@ -1,107 +1,95 @@
-# KLTN — Fraud Policy Experimentation with ABM
+# KLTN — Thử nghiệm chính sách quản lý gian lận bằng ABM
 
-Research workspace for an undergraduate thesis on **transaction-fraud policy experimentation under adaptive fraudster behavior and limited analyst capacity**.
+Đây là kho làm việc cho khóa luận về **thử nghiệm chính sách quản lý gian lận giao dịch bằng mô phỏng dựa trên tác tử (Agent-Based Modelling — ABM)**.
 
-## Current thesis framing
+## Hướng nghiên cứu hiện tại
 
-> Use Agent-Based Modelling (ABM) as a policy laboratory to stress-test alternative fraud-management policies in a dynamic environment where fraudsters can adapt to system feedback and fraud analysts have limited review capacity.
+> Dùng ABM như một “phòng thí nghiệm chính sách” để stress-test các chính sách quản lý gian lận trong một hệ thống động, nơi fraudster có thể thích nghi với phản hồi của hệ thống và fraud analyst có năng lực review hữu hạn.
 
-The current project logic is:
+Cách hiểu ngắn gọn:
 
-- **Research objective:** policy experimentation / stress testing.
-- **ABM:** research instrument.
-- **Adaptive fraudster:** stress mechanism.
-- **Alert queue + analyst capacity:** operational constraint and feedback mechanism.
-- **Risk model:** one component of the detection system, not the thesis contribution.
-- **Empirical grounding:** public fraud data + literature + explicit assumptions.
+- **Mục tiêu nghiên cứu:** thử nghiệm / stress-test chính sách.
+- **ABM:** công cụ nghiên cứu.
+- **Adaptive fraudster:** cơ chế tạo áp lực đối kháng lên policy.
+- **Alert queue + analyst capacity:** ràng buộc vận hành.
+- **Risk model / ML:** một thành phần của hệ thống, không phải mục tiêu cuối.
+- **Dữ liệu:** dùng để grounding các phân bố, state và risk score; không giả vờ tái tạo chính xác một ngân hàng thật.
 
-## Start here
+## Bắt đầu đọc từ đâu?
 
-Read in this order:
+Đọc theo thứ tự:
 
 1. `00 Dashboard/READING ORDER.md`
 2. `00 Dashboard/Current Direction - 2026-10-11.md`
 3. `03 Model design/Research Design v1.0 - Policy Experimentation.md`
 4. `03 Model design/Conceptual Model v1.0 - Adaptive Policy ABM.md`
-5. `03 Model design/Parameter Registry v0.2.md`
-6. `03 Model design/Two-Scenario Data Strategy v0.1.md`
-7. `05 Experiments/Adaptive Policy Experiment Plan v0.1.md`
+5. `04 Meetings/GVHD Brief - Current Direction 2026-10-11.md`
 
-For supervisor discussion:
-- `04 Meetings/GVHD Brief - Current Direction 2026-10-11.md`
+Sau đó mới đọc các file parameter, data, experiment và code.
 
-## Empirical scenarios
+## Hai môi trường dữ liệu dự kiến
 
 ### Scenario A — IEEE-CIS
-Online/card/e-commerce fraud environment.
+Đại diện cho môi trường online/card/e-commerce.
 
 ### Scenario B — Xente
-Mobile/payment/e-commerce fraud environment.
+Đại diện cho môi trường mobile/payment/e-commerce tại Uganda.
 
-The datasets are **not merged**. Each independently parameterizes the same conceptual framework.
+**Không ghép hai dataset thành một dataset lớn.** Mỗi dataset parameterize một scenario riêng của cùng framework.
 
-## Work already completed before the current framing
+## Những gì đã làm được từ hướng Xente trước đây
 
-The repository contains a substantial Xente queue/capacity pilot from the earlier, narrower direction:
+Phần này **không bỏ đi**, vì đã có nhiều kết quả và code thật:
 
-- Xente data audit and empirical profiling;
+- audit và profile Xente;
 - leakage-safe customer-history features;
 - chronological logistic risk baseline;
 - persistent alert queue;
 - FIFO vs risk-priority;
-- fixed/relative pooled capacity experiments;
+- capacity stress;
 - threshold/load sensitivity;
 - stochastic service-time robustness;
 - variable team-capacity sensitivity;
-- automated queue verification tests.
+- unit tests cho queue.
 
-These results are **not discarded**. They are treated as:
-1. empirical groundwork for the Xente scenario;
-2. a validated operational queue module;
-3. pilot evidence that policy/capacity mechanisms affect system outcomes.
+Các file cũ nói “Xente là core duy nhất”, “IEEE chỉ optional” hay “adaptive fraudster không phải core” đã **hết vai trò định hướng**, nhưng vẫn được giữ để truy vết và tái sử dụng mechanism.
 
-However, older files that state "Xente only", "IEEE optional", or "do not model adaptive fraudster" are **superseded as project framing** and should not be read as the current research design.
+## Code chính hiện có
 
-See:
-- `00 Dashboard/Repo Audit - 2026-10-11.md`
-
-## Current prototype code
-
-### Xente empirical / queue modules
+### Xente / queue
 - `scripts/profile_xente.py`
 - `scripts/build_xente_features.py`
 - `scripts/train_xente_baseline.py`
 - `scripts/simulate_alert_queue.py`
-- robustness/sensitivity runners
+- các script sensitivity / robustness.
 
-### Adaptive fraudster prototype
+### Adaptive fraudster
 - `scripts/adaptive_fraudster.py`
 - `scripts/run_adaptive_vs_static.py`
 - `tests/test_adaptive_fraudster.py`
 
-The adaptive runner is currently a **synthetic smoke test**, not a thesis result.
+Lưu ý: adaptive runner hiện mới là **smoke test**, chưa phải kết quả khóa luận.
 
-## Git workflow
+## Quy tắc Git
 
-- `main`: accepted/stable version.
-- `chatgpt-draft`: active working branch for review before merge.
+- `main`: bản ổn định đã chấp nhận.
+- `chatgpt-draft`: branch đang làm việc / review trước khi merge.
 
-## Data and security
+## Bảo mật và dữ liệu
 
-Do not commit:
-- raw Xente / IEEE-CIS competition data;
-- row-level restricted data;
-- employer/internal data;
-- proprietary thresholds/rules;
-- API keys, passwords, tokens or secrets.
+Không commit:
+- raw Xente / IEEE-CIS;
+- dữ liệu nội bộ công ty;
+- threshold/rule proprietary;
+- API key, token, mật khẩu;
+- dữ liệu người dùng nhạy cảm.
 
-## Claim boundary
+## Giới hạn claim
 
-The project does not claim:
-- a digital twin of a bank;
-- a production-ready fraud system;
-- a universal optimal policy;
-- exact real-world fraudster cognition;
-- direct policy advice for a specific financial institution.
+Không claim:
+- digital twin của ngân hàng;
+- fraudster trong model suy nghĩ giống fraudster thật;
+- một policy tối ưu phổ quát;
+- ngưỡng/staffing production cho một tổ chức cụ thể.
 
-Conclusions must remain conditional on the evaluated scenarios, assumptions and parameter ranges.
+Kết luận phải luôn gắn với scenario, assumption và parameter range đã thử.
