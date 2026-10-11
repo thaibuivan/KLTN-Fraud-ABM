@@ -2,134 +2,103 @@
 
 ## Hướng hiện tại
 
-> **Dùng ABM để thử nghiệm chính sách quản lý gian lận giao dịch trong hệ thống có fraudster thích nghi và analyst capacity hữu hạn.**
+> **KLTN phát triển trực tiếp từ đề án FinRisk: giữ bài toán transaction-risk decisioning nhưng nâng synthetic framework thành Xente-grounded dynamic policy simulation có persistent queue và adaptive fraudster.**
 
-### Câu hỏi nghiên cứu chính
+## Câu hỏi nghiên cứu chính
 
-> Các chính sách quản lý gian lận giao dịch khác nhau hoạt động như thế nào khi fraudster có khả năng thích nghi và năng lực xử lý của fraud analyst bị giới hạn?
+> Các chính sách quản lý gian lận giao dịch hoạt động như thế nào khi fraudster thích nghi với phản hồi của hệ thống và analyst capacity bị giới hạn?
 
-## Hãy nhớ 5 khối này
+## Hãy nhớ chuỗi này
 
 ```text
-Research Question
+Đề án FinRisk
       ↓
-Real Data
+Xente empirical grounding
       ↓
-Risk + Policy + Queue + Analyst
+Risk + Policy + Persistent Queue + Analyst
       ↓
-Adaptive Fraudster
+Static / Adaptive Fraudster
       ↓
-Policy Experiments + Robustness
+Core policy experiments
+      ↓
+Sensitivity / robustness
+      ↓
+KLTN Results
 ```
 
-## File nào là “nguồn sự thật” hiện tại?
+## Source of truth hiện tại
 
+- [[De an to KLTN - Development Map]]
 - [[Current Direction - 2026-10-11]]
-- [[Research Design v1.0 - Policy Experimentation]]
-- [[Conceptual Model v1.0 - Adaptive Policy ABM]]
+- [[Research Design v1.1 - Develop from FinRisk Proposal]]
+- [[Xente Full Model Specification v1.0]]
 - [[Parameter Registry v0.2]]
-- [[Two-Scenario Data Strategy v0.1]]
 - [[Adaptive Fraudster Design v0.1]]
-- [[Adaptive Policy Experiment Plan v0.1]]
-- [[GVHD Brief - Current Direction 2026-10-11]]
-
-Các file v0.1/v0.2/v0.3 cũ không phải hướng hiện tại nếu nội dung mâu thuẫn với các file trên.
+- [[Validation Plan v1.0]]
+- [[Final Core Experiment Grid v1.0]]
 
 ## Những gì đã làm thật
 
-### 1. Xente data
-- audit dữ liệu;
-- profile empirical;
-- 95,662 giao dịch có nhãn;
+### Xente empirical layer
+- 95,662 labelled transactions;
 - 193 fraud;
-- 3,742 CustomerId;
-- phát hiện cold-start và strong Value signal.
+- 3,742 CustomerIds;
+- chronological state/features;
+- logistic risk baseline;
+- temporal / structural score checks.
 
-### 2. Risk baseline
-- chronological 70/15/15;
-- leakage-safe customer history;
-- logistic baseline;
-- temporal robustness;
-- full / no-current-value / amount-only comparison.
-
-### 3. Queue / analyst capacity
+### Operational layer
 - persistent alert queue;
-- FIFO;
-- risk-priority;
+- FIFO / risk-priority;
 - fixed/relative pooled capacity;
 - threshold overload;
-- stochastic service time;
+- service-time stochasticity;
 - variable team capacity;
-- starvation / tail-wait diagnostics;
-- queue verification tests.
+- starvation/tail waiting.
 
-### 4. Hướng ABM mới
-- Research Design v1.0;
-- two-scenario strategy: IEEE-CIS + Xente;
-- adaptive fraudster specification;
-- adaptive fraudster smoke-test code;
-- Parameter Registry;
-- supervisor brief.
+### Adaptive layer
+- fraudster state/update prototype;
+- static comparator;
+- dormancy mechanism;
+- synthetic smoke experiment.
 
-## Những gì chưa xong
+### Policy layer
+Đã thêm interface chung:
+- Fixed-threshold;
+- Capacity-aware;
+- Cost-sensitive extension.
 
-- IEEE-CIS audit theo scope hiện tại;
-- tích hợp adaptive fraudster vào empirical scenario;
-- freeze 3 policy definitions;
-- full adaptive-vs-static experiment;
-- cross-scenario robustness;
-- final sensitivity;
-- final Results/Discussion.
+## Scope core
 
-## Conceptual model
+### Data
+- **Xente: core**
+- IEEE-CIS: optional external robustness.
+
+### Policy
+- Fixed-threshold: core.
+- Capacity-aware: core.
+- Cost-sensitive: extension nếu cost grounding đủ tốt.
+
+### Core experiment
 
 ```text
-Customer --------\
-                  \
-                   -> Transaction -> Detection System -> Policy
-Fraudster --------/                                  |
-   ^                                                  |
-   |                                                  v
-   +--------- observe response <--- Approve / Step-up / Review / Block
-                                                    |
-                                                    v
-                                               Alert Queue
-                                                    |
-                                                    v
-                                                 Analyst
-                                                    |
-                                                    v
-                                                  Outcome
+2 Fraudster modes
+×
+2 Policies
+×
+3 Capacity levels
+=
+12 configurations
 ```
-
-## Policy dự kiến
-
-1. Fixed threshold.
-2. Cost-sensitive.
-3. Capacity-aware.
-
-## Thí nghiệm chính
-
-1. Static vs Adaptive Fraudster.
-2. Policy comparison.
-3. Analyst-capacity stress test.
-
-## Quy tắc parameter
-
-Mỗi parameter phải thuộc một trong bốn nhóm:
-
-- empirical;
-- literature-informed;
-- policy variable;
-- explicit behavioral assumption.
-
-Không có dữ liệu thì không được giả vờ là đã “estimate”.
 
 ## Việc tiếp theo
 
-1. Gặp GVHD và chốt framing.
-2. Freeze policy definitions.
-3. Audit IEEE-CIS.
-4. Tích hợp adaptive fraudster vào một scenario trước.
-5. Chạy MVP end-to-end.
-6. Sau đó mới mở rộng robustness.
+1. tích hợp policy layer vào Xente event-driven simulator;
+2. freeze baseline queue discipline;
+3. xây empirical fraud transaction generator;
+4. nối Static Fraudster;
+5. nối Adaptive Fraudster;
+6. chạy end-to-end pilot;
+7. chạy 12 core configurations;
+8. sensitivity / convergence;
+9. final writing.
