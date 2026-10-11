@@ -1,84 +1,126 @@
-# Current Direction — 2026-10-11
+# Hướng nghiên cứu hiện tại — 2026-10-11
 
-## One-sentence thesis framing
+## Một câu để nhớ
 
-Use **Agent-Based Modelling (ABM) as a policy laboratory** to stress-test transaction-fraud management policies in a dynamic system where fraudsters can adapt to system feedback and fraud analysts have limited review capacity.
+> Dùng **Agent-Based Modelling (ABM) như một phòng thí nghiệm chính sách** để stress-test các chính sách quản lý gian lận giao dịch trong hệ thống có fraudster thích nghi và fraud analyst có năng lực review hữu hạn.
 
-## Current status
+## Vai trò từng phần
 
-This is the **current working direction for supervisor discussion**. It extends, rather than deletes, the earlier Xente queue/capacity work already in this repository.
+- **Mục tiêu:** policy experimentation / stress testing.
+- **ABM:** công cụ nghiên cứu.
+- **Adaptive fraudster:** cơ chế stress-test.
+- **Alert queue + analyst capacity:** ràng buộc vận hành.
+- **Risk model:** thành phần cung cấp risk score.
+- **Public data:** grounding empirical cho scenario.
+- **Sensitivity analysis:** xử lý uncertainty khi parameter không xác định chính xác.
 
-### Core research logic
+## Câu hỏi nghiên cứu chính
 
-- **Research objective:** policy experimentation / stress testing.
-- **ABM:** research instrument.
-- **Adaptive fraudster:** stress mechanism.
-- **Analyst capacity + alert queue:** operational constraint and feedback mechanism.
-- **ML risk model:** a component of the detection system, not the thesis end-goal.
-- **Empirical grounding:** public fraud datasets + literature + explicit assumptions.
+> Các chính sách quản lý gian lận giao dịch khác nhau hoạt động như thế nào khi fraudster có khả năng thích nghi và analyst capacity bị giới hạn?
 
-## Main research question
+## Ba câu hỏi phụ
 
-> How do alternative transaction-fraud management policies perform under adaptive fraudster behavior and analyst capacity constraints?
+### RQ1 — Adaptation
+Fraudster thích nghi làm thay đổi fraud loss và policy effectiveness thế nào so với fraudster tĩnh?
 
-## Sub-questions
+### RQ2 — Policy trade-off
+Các policy tạo trade-off thế nào giữa:
+- fraud loss;
+- false positive;
+- customer friction;
+- analyst workload;
+- backlog / delay?
 
-1. How does adaptive fraudster behavior change policy effectiveness relative to static fraud behavior?
-2. What trade-offs do different policies create among fraud loss, false positives, customer friction and analyst workload?
-3. How do analyst capacity and parameter uncertainty affect policy robustness?
+### RQ3 — Robustness
+Analyst capacity và parameter uncertainty làm thay đổi kết luận policy thế nào?
 
-## Current conceptual architecture
+## Kiến trúc khái niệm
 
 ```text
-Customer --------                                     -> Transaction -> Detection System -> APPROVE
-Adaptive Fraudster/                         |           -> STEP-UP
-                                           |           -> REVIEW -> Alert Queue -> Analyst
-                                           |           -> BLOCK
-                                           |
-                                           +--> response observed by fraudster
-                                                  |
-                                                  v
-                                          strategy adaptation
+Customer --------\
+                  \
+                   -> Transaction -> Detection -> Policy
+Fraudster --------/                             |
+   ^                                            |
+   |                                            v
+   +----------- feedback <--- Approve / Step-up / Review / Block
+                                              |
+                                              v
+                                         Alert Queue
+                                              |
+                                              v
+                                           Analyst
+                                              |
+                                              v
+                                           Outcome
 ```
 
-Two dynamic feedback loops matter:
+Có hai feedback loop:
 
-1. **Adversarial loop:** fraudster action -> system response -> adaptation -> next action.
-2. **Operational loop:** alert policy -> queue -> backlog/delay -> loss/workload -> policy outcomes.
+1. **Adversarial:** system response làm fraudster thay đổi strategy.
+2. **Operational:** policy làm thay alert volume, queue, backlog và review delay.
 
-## Current data direction
+## Dữ liệu
 
 ### Scenario A — IEEE-CIS
-Online / card / e-commerce transaction environment.
+Online/card/e-commerce.
 
 ### Scenario B — Xente
-Mobile/payment/e-commerce environment in Uganda.
+Mobile/payment/e-commerce.
 
-Important: the two datasets are **not merged**. Each independently parameterizes the same conceptual framework.
+Không ghép hai dataset.
 
-Xente use has been explicitly permitted by Zindi for thesis use with attribution and acknowledgement.
+Mỗi scenario có:
+- empirical distributions riêng;
+- risk model riêng;
+- parameter riêng;
+- cùng một conceptual framework.
 
-## Current policy families
+## Policy dự kiến
 
-1. Fixed-threshold policy.
-2. Cost-sensitive policy.
-3. Capacity-aware policy.
+1. Fixed threshold.
+2. Cost-sensitive.
+3. Capacity-aware.
 
-## Main experiments
+## Ba experiment chính
 
 1. Static vs adaptive fraudster.
-2. Fixed vs cost-sensitive vs capacity-aware policy.
+2. So sánh ba policy.
 3. Analyst-capacity stress test.
+
+## Điều đã có
+
+Phần Xente đã có:
+- data audit;
+- empirical profile;
+- leakage-safe features;
+- logistic risk baseline;
+- persistent queue;
+- FIFO vs risk-priority;
+- capacity and threshold sensitivity;
+- stochastic robustness.
+
+Adaptive fraudster đã có:
+- specification;
+- code prototype;
+- unit test;
+- synthetic smoke runner.
+
+## Điều chưa có
+
+- IEEE-CIS audit đầy đủ theo scope mới;
+- adaptive fraudster tích hợp vào Xente/IEEE scenario thật;
+- final policy definitions;
+- full final experiment grid;
+- final Results/Discussion.
 
 ## Claim boundary
 
-The model will not be described as a digital twin, a production fraud system, or direct policy advice for a specific bank. Conclusions are conditional on the evaluated scenarios, assumptions and plausible parameter ranges.
+Không claim:
+- digital twin;
+- production threshold;
+- bank staffing recommendation;
+- fraudster cognition “thật”;
+- universal best policy.
 
-## Immediate next milestone
-
-Before full ABM implementation:
-1. freeze research design after supervisor feedback;
-2. audit IEEE-CIS and Xente for usable state/parameter grounding;
-3. complete the parameter registry;
-4. implement a minimal end-to-end simulation;
-5. add adaptive fraudster only after the baseline pipeline is verified.
+Chỉ kết luận trong phạm vi scenario, assumptions và ranges đã thử.
