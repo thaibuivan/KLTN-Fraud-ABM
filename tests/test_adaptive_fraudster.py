@@ -120,3 +120,22 @@ def test_unknown_response_raises():
         raise AssertionError(
             "Expected ValueError"
         )
+
+
+def test_reward_scale_normalizes_amount():
+    fraudster = AdaptiveFraudster(
+        ["a"],
+        learning_rate=0.5,
+        epsilon=0.0,
+        reward_scale=100.0,
+        seed=1,
+    )
+    fraudster.current_strategy = "a"
+    reward = fraudster.observe(
+        "APPROVE",
+        amount=200.0,
+        step=0,
+    )
+
+    assert reward == 2.0
+    assert fraudster.states["a"].value == 1.0
