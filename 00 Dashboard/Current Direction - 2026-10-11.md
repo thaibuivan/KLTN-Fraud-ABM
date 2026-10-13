@@ -1,8 +1,8 @@
-# Hướng nghiên cứu hiện tại — 2026-10-11
+# Hướng nghiên cứu hiện tại
 
 ## Một câu để nhớ
 
-> Phát triển trực tiếp từ đề án FinRisk: dùng ABM/dynamic simulation như một phòng thí nghiệm policy, nhưng empirical-ground tốt hơn bằng Xente, mô hình hóa persistent analyst queue và nâng risky actor thành adaptive fraudster có feedback qua nhiều vòng.
+> Phát triển trực tiếp từ đề án FinRisk thành một closed-loop ABM/dynamic policy laboratory có persistent queue và adaptive fraudster, rồi kiểm tra cùng framework trên **hai empirical scenarios bổ sung cho nhau: Xente và IEEE-CIS**.
 
 ## KLTN giữ gì từ đề án?
 
@@ -16,116 +16,80 @@ Giữ:
 
 ## KLTN phát triển gì?
 
-1. Synthetic transaction framework → Xente empirical replay + grounded counterfactuals.
-2. Proxy risk score → trained/validated risk score.
+1. Synthetic-only framework → empirical grounding trên Xente và IEEE-CIS.
+2. Proxy risk score → scenario-specific trained/validated risk models.
 3. Daily overflow → persistent queue/backlog/waiting time.
 4. Fixed risky strategy → static vs adaptive fraudster.
-5. Scenario comparison → systematic factorial experiment + sensitivity.
+5. Scenario comparison → controlled factorial experiment + cross-scenario robustness.
+
+## Hai empirical scenarios core
+
+### Scenario A — Xente
+Mạnh ở:
+- CustomerId;
+- repeated history;
+- timestamp thực;
+- customer-centric state.
+
+### Scenario B — IEEE-CIS
+Mạnh ở:
+- card/device/identity context;
+- richer transaction-risk features;
+- entity/proxy heterogeneity;
+- online/card/e-commerce environment khác Xente.
+
+Không merge data.
 
 ## Main RQ
 
-> Các chính sách quản lý gian lận giao dịch hoạt động như thế nào khi fraudster thích nghi với phản hồi của hệ thống và analyst capacity bị giới hạn?
+> Các fraud-management policies hoạt động như thế nào khi fraudster thích nghi và analyst capacity bị giới hạn, và policy conclusions có robust giữa Xente và IEEE-CIS hay không?
 
-## Core model
+## Shared model
 
 ```text
-Customer / Fraudster
-        ↓
+Scenario state
+    ↓
 Transaction
-        ↓
-Detection / Risk score
-        ↓
+    ↓
+Risk score
+    ↓
 Policy
-   ┌────┼────┐
+ ┌──┼──┐
 Approve Review Block
-          ↓
-      Alert Queue
-          ↓
-       Analyst
-          ↓
-        Outcome
-          ↓
-Fraudster feedback / future behavior
+        ↓
+      Queue
+        ↓
+     Analyst
+        ↓
+     Outcome
+        ↓
+Fraudster feedback
 ```
-
-## Core empirical environment
-
-### Xente — CORE
-Dùng để:
-- empirical customer/history state;
-- chronology;
-- risk model;
-- queue/policy replay;
-- grounding fraud generator.
-
-### IEEE-CIS — OPTIONAL
-Chỉ dùng làm external/cross-scenario robustness nếu core Xente hoàn thành.
-
-## Core policies
-
-1. Fixed-threshold.
-2. Capacity-aware.
-
-Cost-sensitive:
-- giữ như extension;
-- đưa vào main results nếu cost parameters đủ defensible.
 
 ## Core experiment
 
 ```text
-Static / Adaptive fraudster
-×
-Fixed / Capacity-aware
-×
-Low / Medium / High capacity
-=
-12 configurations
+2 datasets
+× 2 fraudster modes
+× 2 policies
+× 3 capacity levels
+= 24 configurations
 ```
 
-## Robustness riêng
+Core policies:
+1. Fixed-threshold.
+2. Capacity-aware.
 
-- FIFO vs risk-priority;
-- full vs degraded score model;
-- stochastic service;
-- variable team capacity;
-- fraudster learning/exploration sensitivity;
-- optional cost-sensitive policy.
+Cost-sensitive:
+- extension nếu grounding cost đủ mạnh.
 
-## Đã hoàn thành
+## Implementation order
 
-Xente:
-- audit/profile;
-- past-only features;
-- logistic baseline;
-- temporal robustness;
-- persistent queue;
-- threshold/load sensitivity;
-- queue-priority experiments;
-- stochastic/variable capacity robustness.
-
-Adaptive:
-- design;
-- code prototype;
-- static comparator;
-- unit tests;
-- synthetic smoke runner.
-
-Policy:
-- shared action/context interface;
-- Fixed-threshold policy;
-- Capacity-aware policy;
-- Cost-sensitive extension;
-- policy tests added.
-
-## Chưa hoàn thành
-
-- integrated Xente policy engine;
-- empirical fraud transaction generator;
-- static fraudster integration;
-- adaptive fraudster integration;
-- core 12-run families across seeds;
-- behavioral sensitivity;
-- final Methods/Results/Discussion.
+1. develop/freeze engine trên Xente;
+2. tách common interfaces;
+3. parameterize IEEE-CIS bằng adapter riêng;
+4. chạy cùng protocol;
+5. compare cross-scenario.
 
 ## Claim boundary
 
