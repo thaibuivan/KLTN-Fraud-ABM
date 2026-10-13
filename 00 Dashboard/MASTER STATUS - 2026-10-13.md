@@ -169,17 +169,22 @@ Implemented:
 Executed on reproduced Xente score stream:
 - [[Xente Integrated Policy Replay v0.1]]
 
-Current working operational baseline:
-- validation review target = 1%;
-- frozen Xente review threshold ≈ 0.014801;
-- Low / Medium / High capacity = 0.75 / 1.00 / 1.25 × validation reference workload;
-- risk-priority = baseline queue discipline;
-- FIFO = structural robustness.
+Current working operational baseline after the normalized replay:
+- validation base review target = 1.00%;
+- Capacity-aware tiers = 1.00% / 0.75% / 0.50% validation review-rate thresholds;
+- frozen Xente thresholds ≈ 0.014801 / 0.026892 / 0.050961;
+- Low / Medium / High capacity = 0.75 / 1.00 / 1.25 × validation base-review workload;
+- **FIFO = core queue discipline** to isolate routing-policy effects;
+- risk-priority = structural robustness;
+- congestion state = backlog-hours.
+
+Operational semantics now frozen in:
+- [[Operational Core Freeze v1.0]]
 
 Still not final:
-- direct BLOCK threshold;
-- unresolved-review fraud-loss semantics;
-- final capacity-aware congestion parameters.
+- direct BLOCK threshold for the adaptive full loop;
+- sensitivity range for congestion triggers;
+- analyst-error extension.
 
 ## 7. Integrated policy + queue engine — EMPIRICALLY VERIFIED ON XENTE
 
@@ -195,11 +200,13 @@ Xente replay milestone:
 - Fixed and Capacity-aware ran on the same empirical score stream;
 - policy observed current queue state;
 - capacity reference remained frozen;
-- Capacity-aware reduced alert volume/backlog/waiting in the pilot, with a small fraud-interception trade-off at the lowest capacity.
+- policy semantics were upgraded from arbitrary raw-score increments to validation-rate-calibrated tiers;
+- FIFO was frozen as the core queue baseline;
+- Capacity-aware reduced review demand/backlog under scarce capacity and its advantage diminished at high capacity.
 
 Do not repeat this pilot unless engine semantics change.
 
-## 8. Adaptive fraudster — FIRST CLOSED-LOOP XENTE PILOT DONE
+## 8. Adaptive fraudster — FIRST CLOSED-LOOP PILOT DONE + FEATURE-LEVEL UPGRADE IN PROGRESS
 
 Exists:
 - Adaptive Fraudster Design v0.1
@@ -232,10 +239,28 @@ Observed pilot behavior:
 - naive congestion-driven threshold raising could create an evasion channel in this pilot.
 
 Important:
-- this is **not final thesis evidence**;
-- current generator samples empirical score/value templates;
+- the historical pilot is **not final thesis evidence**;
+- the old generator sampled empirical score/value templates and is now treated as a historical integration check;
 - reward/congestion parameters are assumption-dependent;
 - Xente Value separation is unusually strong.
+
+New refinement already implemented:
+- adaptive reward now supports scenario-normalized `reward_scale`;
+- `XenteOnlineFeatureBuilder` reproduces the batch past-only feature logic for generated fraud events;
+- `XenteFeatureLevelFraudGenerator` resamples raw fraud context from validation fraud regimes;
+- generated fraud is **rescored through the saved Xente risk model** instead of inheriting a historical risk score;
+- `PolicyQueueEngine` provides a stateful queue/policy engine for adaptive simulation;
+- `run_xente_feature_level_static_adaptive.py` runs the new feature-level closed loop.
+
+Verification completed:
+- online feature builder matched the batch builder on an empirical Xente subset;
+- a 1-seed / 12-configuration smoke run completed successfully;
+- the smoke run exposed an important count-vs-value trade-off: adaptation can reduce capture rate while also shifting toward lower-value fraud, so final reporting must include both count-based and value-based outcomes.
+
+Not completed yet:
+- multi-seed feature-level experiment;
+- sensitivity/convergence;
+- final BLOCK calibration.
 
 ## 9. Xente final scenario — PARTIAL, NOW IN MODEL-REFINEMENT PHASE
 
@@ -250,16 +275,15 @@ Already done:
 - 30-seed integration pilot.
 
 Still needed before final 12 Xente configs:
-1. freeze block/review/outcome semantics;
-2. improve fraud generator beyond score/value-template replay, preferably feature-level amount perturbation with risk rescoring;
+1. sensitivity-test / freeze BLOCK review-rate calibration;
+2. run multi-seed feature-level Static vs Adaptive pilot;
 3. sensitivity-test learning rate / epsilon;
-4. sensitivity-test capacity-aware congestion thresholds/increments;
-5. confirm final Static comparator definition;
-6. run full current test suite;
-7. freeze Xente mechanism;
-8. run 12 Xente core configurations;
-9. seed convergence;
-10. final Xente tables/figures.
+4. sensitivity-test capacity-aware congestion triggers;
+5. test at least one degraded-score specification on the frozen mechanism;
+6. run full current test suite + adaptive integration tests;
+7. freeze final Xente mechanism and parameter registry;
+8. run 12 Xente core configurations with convergence-based seeds;
+9. final Xente tables/figures.
 
 ## 10. IEEE-CIS final scenario — PARTIAL
 
@@ -400,7 +424,9 @@ I. Write final thesis
 
 ## 17. Immediate next task
 
-**No more EDA and no more queue-only pilots.**
+**No more EDA and no more score/value-template redesign.**
+
+The feature-level counterfactual + rescoring path now exists and passed a smoke check.
 
 Next technical task:
-> Upgrade the Xente fraud generator from score/value-template replay to a feature-level counterfactual mechanism (starting with empirically grounded amount regimes), rescore through the existing risk model, then sensitivity-test the adaptive and capacity-aware parameters before freezing the 12-config Xente experiment.
+> Run a small, structured sensitivity pack on the feature-level Xente closed loop (BLOCK calibration, alpha, epsilon, congestion triggers), verify the latest test suite, then freeze the Xente mechanism and execute the final 12 Xente configurations with enough seeds for convergence.
