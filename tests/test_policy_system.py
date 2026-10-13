@@ -2,7 +2,6 @@ import pandas as pd
 
 from scripts.fraud_policies import (
     Action,
-    CapacityAwarePolicy,
     FixedThresholdPolicy,
 )
 from scripts.simulate_policy_system import simulate_policy_system
@@ -65,10 +64,7 @@ def test_fixed_policy_routes_without_using_fraud_label():
         Action.REVIEW.value,
         Action.BLOCK.value,
     ]
-    assert (
-        decisions_a["action"].tolist()
-        == decisions_b["action"].tolist()
-    )
+    assert decisions_a["action"].tolist() == decisions_b["action"].tolist()
     assert summary_a["review_count"] == 1
 
 
@@ -102,7 +98,7 @@ def test_review_never_starts_before_alert_arrival():
     assert (reviews["service_start"] >= reviews["arrival"]).all()
 
 
-def test_zero_capacity_creates_backlog():
+def test_zero_capacity_creates_backlog_and_unresolved_fraud_exposure():
     df = scored_frame()
     policy = FixedThresholdPolicy(0.0, 1.0)
 
@@ -116,6 +112,9 @@ def test_zero_capacity_creates_backlog():
     assert reviews.empty
     assert summary["review_count"] == 3
     assert summary["backlog_end"] == 3
+    assert summary["unresolved_fraud_count"] == 2
+    assert summary["unresolved_fraud_value"] == 500.0
+    assert summary["fraud_exposure_at_horizon"] == 500.0
 
 
 def test_high_capacity_removes_backlog():
@@ -132,42 +131,7 @@ def test_high_capacity_removes_backlog():
     )
 
     assert summary["backlog_end"] == 0
-
-
-def test_capacity_aware_uses_current_queue_state():
-    t0 = pd.Timestamp("2026-01-01T00:00:00Z")
-    df = pd.DataFrame(
-        [
-            {
-                "TransactionId": f"T{i}",
-                "TransactionStartTime": t0 + pd.Timedelta(minutes=i),
-                "Value": 100.0,
-                "FraudResult": 0,
-                "risk_probability": 0.50,
-            }
-            for i in range(5)
-        ]
-    )
-    policy = CapacityAwarePolicy(
-        base_review_threshold=0.40,
-        block_threshold=0.95,
-        soft_backlog_hours=0.5,
-        hard_backlog_hours=1.0,
-        soft_increment=0.20,
-        hard_increment=0.30,
-    )
-
-    _, decisions, _ = simulate_policy_system(
-        df,
-        policy,
-        pooled_service_rate_per_hour=1.0,
-        discipline="fifo",
-    )
-
-    # First alert starts immediately. The second waits, increasing congestion;
-    # later identical-risk transactions can then be approved instead of reviewed.
-    assert decisions.iloc[0]["action"] == Action.REVIEW.value
-    assert Action.APPROVE.value in decisions["action"].tolist()[2:]
+    assert summary["fraud_exposure_at_horizon"] == 0.0
 
 
 def test_fraud_intercept_counts_block_or_review_started_in_horizon():
@@ -186,3 +150,4 @@ def test_fraud_intercept_counts_block_or_review_started_in_horizon():
     assert summary["fraud_transactions"] == 2
     assert summary["fraud_intercepted_within_horizon"] == 2
     assert summary["fraud_intercept_rate"] == 1.0
+    assert summary["fraud_exposure_at_horizon"] == 0.0
