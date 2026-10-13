@@ -12,20 +12,19 @@ Xente + IEEE-CIS
 = 24 core configurations
 ```
 
-## Already completed
+## Completed
 
 ### Data / EDA
-- [x] Xente raw data available in Library
-- [x] Xente full EDA notebook
-- [x] Xente Data → ABM mapping
-- [x] IEEE-CIS raw zip / identity files available in Library
-- [x] IEEE-CIS full EDA notebook
-- [x] IEEE Data → ABM mapping
-- [x] two-scenario complementarity established
+- [x] Xente raw data available
+- [x] Xente full EDA + Data → ABM
+- [x] IEEE-CIS raw data available
+- [x] IEEE-CIS full EDA + Data → ABM
+- [x] two-scenario complementarity frozen
 
 ### Xente empirical groundwork
 - [x] leakage-safe customer-history features
 - [x] chronological logistic baseline
+- [x] baseline reproduced from Library raw data
 - [x] temporal robustness
 - [x] degraded score models
 - [x] persistent queue
@@ -33,42 +32,39 @@ Xente + IEEE-CIS
 - [x] threshold/load sensitivity
 - [x] stochastic service
 - [x] variable team capacity
-- [x] starvation/tail waiting analysis
+- [x] starvation/tail waiting
 
-### Shared model design/code
-- [x] Research Design v1.1
-- [x] Shared Two-Scenario Architecture
-- [x] Parameter Registry
-- [x] Validation Plan
+### Shared model / Xente integration
 - [x] Fixed policy code
 - [x] Capacity-aware policy code
 - [x] Cost-sensitive extension code
-- [x] integrated policy + queue engine code
-- [x] Xente policy replay runner
-- [x] IEEE policy replay runner
-- [x] Xente/IEEE scenario adapters
+- [x] integrated policy + queue engine
+- [x] empirical Fixed vs Capacity-aware Xente replay
+- [x] Low/Medium/High capacity normalized to validation workload
 - [x] adaptive fraudster prototype
-- [x] static comparator
-- [x] experiment grid / cross-scenario plan
+- [x] StaticMixture comparator
+- [x] Xente validation-based fraud-template generator
+- [x] shared adaptive-policy simulation engine
+- [x] first 30-seed Static vs Adaptive Xente closed-loop pilot
 
 ## Still required
 
-### Shared engine
-- [ ] execute current policy/queue tests end-to-end
-- [ ] verify empirical policy replay on Xente
-- [ ] freeze action/outcome semantics
-- [ ] freeze normalized Low/Medium/High capacity definition
-- [ ] integrate adaptive fraudster with shared engine
-- [ ] shared seed/convergence runner
-- [ ] shared result schema
+### Xente final mechanism
+- [ ] feature-level counterfactual fraud generator / amount perturbation
+- [ ] rescore generated fraud through existing risk model
+- [ ] freeze BLOCK semantics
+- [ ] freeze unresolved-review outcome semantics
+- [ ] learning-rate sensitivity
+- [ ] epsilon sensitivity
+- [ ] capacity-aware congestion-parameter sensitivity
+- [ ] run latest full test suite
+- [ ] freeze final Xente mechanism
 
-### Xente final
-- [ ] Xente-grounded fraud generator
-- [ ] Static full loop
-- [ ] Adaptive full loop
-- [ ] 12 core configs
-- [ ] convergence/sensitivity
-- [ ] final figures/tables
+### Xente final results
+- [ ] 12 core Xente configurations
+- [ ] convergence / Monte Carlo error
+- [ ] robustness pack on frozen model
+- [ ] final Xente tables/figures
 
 ### IEEE final
 - [ ] executable chronological feature pipeline
@@ -80,27 +76,27 @@ Xente + IEEE-CIS
 - [ ] Adaptive full loop
 - [ ] 12 core configs
 - [ ] convergence/sensitivity
-- [ ] final figures/tables
+- [ ] final IEEE tables/figures
 
 ### Cross-scenario
-- [ ] run 24 configurations
 - [ ] adaptation penalty
 - [ ] capacity-aware gain
 - [ ] policy ranking
 - [ ] consistent vs environment-dependent conclusions
+- [ ] final cross-scenario figures
 
 ### Final validation
-- [ ] current full test suite
 - [ ] adaptive integration tests
 - [ ] extreme-condition tests
 - [ ] final parameter registry
 - [ ] seed convergence report
+- [ ] cross-scenario validation summary
 
 ### Writing
 - [ ] Introduction
 - [ ] Literature Review
 - [ ] Data
-- [ ] Methodology
+- [ ] full Methodology
 - [ ] Results
 - [ ] Discussion
 - [ ] Limitations
@@ -109,11 +105,8 @@ Xente + IEEE-CIS
 
 ## Immediate next task
 
-**No more EDA.**
-
-1. materialize existing Xente data;
-2. regenerate/locate validation + test risk scores;
-3. run `run_xente_policy_replay.py`;
-4. inspect Fixed vs Capacity-aware results;
-5. freeze operational semantics;
-6. then integrate Static/Adaptive fraudster.
+1. replace score/value-template replay with feature-level Xente fraud amount perturbation;
+2. rescore through existing logistic risk model;
+3. sensitivity-test alpha / epsilon / congestion thresholds;
+4. freeze the Xente closed-loop model;
+5. run the 12 final Xente configurations.
