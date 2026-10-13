@@ -1,23 +1,22 @@
 # Final Core Experiment Grid v1.0
 
-## Mục tiêu
+## Core design toàn khóa luận
 
-Giữ experiment grid đủ nhỏ để trả lời RQ rõ ràng và tránh factorial explosion.
+Bốn factors:
 
-## Core factors
+### A — Dataset
+- Xente
+- IEEE-CIS
 
-### Factor A — Fraudster mode
-2 mức:
+### B — Fraudster mode
 - Static
 - Adaptive
 
-### Factor B — Policy
-2 mức:
+### C — Policy
 - Fixed-threshold
 - Capacity-aware
 
-### Factor C — Analyst capacity
-3 mức:
+### D — Analyst capacity
 - Low
 - Medium
 - High
@@ -25,10 +24,10 @@ Giữ experiment grid đủ nhỏ để trả lời RQ rõ ràng và tránh fact
 Tổng:
 
 ```text
-2 × 2 × 3 = 12 configurations
+2 × 2 × 2 × 3 = 24 configurations
 ```
 
-## 12 configurations
+## 12 configurations lặp lại trên mỗi dataset
 
 | # | Fraudster | Policy | Capacity |
 |---:|---|---|---|
@@ -45,35 +44,41 @@ Tổng:
 | 11 | Adaptive | Capacity-aware | Medium |
 | 12 | Adaptive | Capacity-aware | High |
 
+Chạy bảng này một lần cho Xente và một lần cho IEEE-CIS.
+
 ## Comparisons chính
 
-### RQ1 — Effect of adaptation
-Giữ policy và capacity cố định:
+### RQ1 — Adaptation
+Static vs Adaptive trong cùng:
+- dataset;
+- policy;
+- capacity.
+
+### RQ2 — Policy
+Fixed vs Capacity-aware trong cùng:
+- dataset;
+- fraudster mode;
+- capacity.
+
+### RQ3 — Capacity
+Low → Medium → High trong cùng:
+- dataset;
+- fraudster mode;
+- policy.
+
+### RQ4 — Cross-scenario robustness
+So effect/ranking giữa Xente và IEEE-CIS.
+
+## Interaction trung tâm
 
 ```text
-Static vs Adaptive
+Dataset
+× Adaptation
+× Policy
+× Capacity
 ```
 
-### RQ2 — Effect of policy
-Giữ fraudster mode và capacity cố định:
-
-```text
-Fixed vs Capacity-aware
-```
-
-### RQ3 — Effect of scarce review resources
-Giữ fraudster mode và policy cố định:
-
-```text
-Low → Medium → High capacity
-```
-
-### Interaction quan trọng
-Kiểm tra:
-
-> lợi ích của capacity-aware policy có lớn hơn khi fraudster adaptive và capacity thấp hay không?
-
-Đây là interaction trung tâm của thesis.
+Không nhất thiết fit một statistical interaction model phức tạp; có thể phân tích effect contrasts + uncertainty intervals.
 
 ## Seeds
 
@@ -81,28 +86,27 @@ Pilot:
 - 20–30 seeds.
 
 Final:
-- chọn N dựa trên convergence / Monte Carlo error của các metrics chính;
-- không chọn N chỉ vì một con số tròn.
+- chọn N theo convergence / Monte Carlo error.
 
 ## Core outcomes
 
 Fraud:
-- successful fraud value;
-- prevented fraud value;
-- fraud capture.
+- successful fraud exposure/value;
+- prevented/intercepted fraud;
+- fraud capture/intercept rate.
 
 Operations:
 - alert/review count;
 - backlog;
 - mean/P95 wait;
-- analyst load/utilization proxy.
+- utilization/load proxy.
 
-Customer:
+Customer/intervention:
 - legitimate review;
 - legitimate block;
 - intervention rate.
 
-## Robustness không nhân vào full grid
+## Robustness không nhân vào 24 core configs
 
 Chạy riêng:
 1. FIFO vs risk-priority.
@@ -115,28 +119,11 @@ Chạy riêng:
 
 ## Cost-sensitive extension
 
-Nếu cost grounding đủ tốt:
+Nếu đủ grounding:
 
 ```text
-Fixed
-vs
-Capacity-aware
-vs
-Cost-sensitive
+2 datasets × 2 fraudster × 3 policies × 3 capacity
+= 36 configurations
 ```
 
-khi đó grid mở rộng thành:
-
-```text
-2 × 3 × 3 = 18 configurations
-```
-
-Nhưng 18-config grid không phải điều kiện để core thesis hoàn thành.
-
-## Dataset scope
-
-Core final experiment:
-- Xente.
-
-Optional replication:
-- IEEE-CIS sau khi Xente full model và final results đã ổn định.
+Nhưng 36-config grid không phải core requirement.
