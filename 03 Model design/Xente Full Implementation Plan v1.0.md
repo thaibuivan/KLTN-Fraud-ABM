@@ -1,8 +1,10 @@
-# Xente Full Implementation Plan v1.0
+# Xente Full Implementation Plan v1.0 — Scenario A
 
-## Mục tiêu
+## Vai trò
 
-Hoàn thành core KLTN trên Xente trước khi mở rộng dataset khác.
+Xente là **Scenario A core** và là nơi phát triển/freeze shared engine trước.
+
+Hoàn thiện Xente trước về thứ tự coding **không có nghĩa IEEE-CIS là phụ**. Sau khi common interfaces ổn định, chúng được tái sử dụng cho Scenario B.
 
 ## Stage 0 — Empirical baseline ✅
 
@@ -20,26 +22,23 @@ Hoàn thành core KLTN trên Xente trước khi mở rộng dataset khác.
 - persistent queue;
 - FIFO / risk-priority;
 - fixed-capacity threshold sensitivity;
-- service-time stochasticity;
+- stochastic service;
 - variable team capacity;
 - starvation/tail waiting;
 - verification tests.
 
-## Stage 2 — Shared policy layer ✅ code added
+## Stage 2 — Shared policy layer ✅
 
 Đã thêm:
 - `scripts/fraud_policies.py`
 - `tests/test_fraud_policies.py`
 
-Policy interface:
-- APPROVE
-- REVIEW
-- BLOCK
-
-Implement:
+Core:
 - FixedThresholdPolicy;
-- CapacityAwarePolicy;
-- CostSensitivePolicy extension.
+- CapacityAwarePolicy.
+
+Extension:
+- CostSensitivePolicy.
 
 ## Stage 3 — Integrated policy + queue engine ✅ code added
 
@@ -48,126 +47,72 @@ Implement:
 - `tests/test_policy_system.py`
 - `scripts/run_xente_policy_replay.py`
 
-Mục tiêu:
-- policy quan sát queue state tại đúng thời điểm;
-- REVIEW mới vào queue;
-- APPROVE/BLOCK không vào queue;
-- fixed staffing được giữ khi so policy.
+Còn phải chạy/verify trên local Xente score files.
 
-### Việc phải chạy local
-Dùng validation/test score files đã sinh từ Xente:
+## Stage 4 — Freeze operational baseline ⏳
 
-```bash
-python scripts/run_xente_policy_replay.py \
-  --validation-scores outputs/local/xente_baseline/validation_scores.csv \
-  --test-scores outputs/local/xente_baseline/test_scores.csv
-```
+Chốt:
+- baseline queue discipline;
+- review threshold calibration;
+- block action treatment;
+- Low / Medium / High normalized capacity.
 
-Đây là **pre-adaptation pilot**, chưa phải final result.
+## Stage 5 — Xente-grounded fraud generator ⏳
 
-## Stage 4 — Freeze baseline operational choices ⏳
-
-Sau pilot phải chốt:
-- baseline queue discipline: FIFO hay risk-priority;
-- review target / threshold calibration rule;
-- block có bật trong core hay để threshold = 1.0;
-- low/medium/high capacity definition.
-
-Nguyên tắc:
-- policy comparison không được tự thay staffing;
-- capacity levels phải dùng chung reference.
-
-## Stage 5 — Empirical fraud generator ⏳
-
-Mục tiêu:
-tạo fraud counterfactual nhưng vẫn bám Xente.
-
-Không sinh toàn bộ world từ đầu.
-
-### Baseline design
 Legitimate environment:
-- replay observed legitimate Xente events.
+- replay observed legitimate events.
 
-Fraud generator:
-- sample/perturb từ observed fraud support;
-- giữ explicit bounds cho Value/context/timing;
-- không tạo mechanism mà Xente không support nếu không gắn assumption label.
+Fraud counterfactual:
+- sample/perturb từ empirical fraud support;
+- explicit bounds;
+- no unsupported mechanism without assumption label.
 
-Output phải có cùng feature interface để risk engine chấm score.
+## Stage 6 — Static fraudster ⏳
 
-## Stage 6 — Static fraudster integration ⏳
+Fixed strategy distribution.
 
-Static fraudster:
-- fixed strategy distribution;
-- không update theo response.
+## Stage 7 — Adaptive fraudster ⏳
 
-Mục tiêu:
-- tạo comparator cho RQ1;
-- đảm bảo full event loop chạy trước khi thêm adaptation.
-
-## Stage 7 — Adaptive fraudster integration ⏳
-
-Nối:
 ```text
-strategy
-→ fraud transaction
-→ risk model
-→ policy response
-→ reward
-→ strategy update
+strategy → fraud event → risk → policy → response → reward → update
 ```
 
-Parameter:
-- learning rate alpha;
-- exploration epsilon;
-- dormancy rule.
-
-Tất cả là explicit assumptions/sensitivity parameters nếu không có independent empirical evidence.
-
-## Stage 8 — Core 12 configurations ⏳
+## Stage 8 — 12 Xente core configurations ⏳
 
 ```text
 Static / Adaptive
-×
-Fixed / Capacity-aware
-×
-Low / Medium / High capacity
+× Fixed / Capacity-aware
+× Low / Medium / High
+= 12
 ```
 
-Pilot:
-- 20–30 seeds.
-
-Final:
-- chọn N theo convergence.
-
-## Stage 9 — Robustness ⏳
+## Stage 9 — Xente sensitivity ⏳
 
 Chạy riêng:
-- FIFO vs risk-priority;
-- degraded risk score;
-- service randomness;
-- team-capacity randomness;
-- alpha/epsilon sensitivity;
+- FIFO/risk-priority;
+- degraded score;
+- service/capacity stochasticity;
+- alpha/epsilon;
 - optional cost-sensitive.
 
-## Stage 10 — Final outputs ⏳
+## Stage 10 — Freeze common interfaces for IEEE-CIS ⏳
 
-Xuất reproducible:
-- configuration table;
-- seed-level results;
-- aggregated results;
-- main figures;
-- robustness appendix;
-- final parameter registry snapshot.
+Sau khi Xente chạy ổn:
+- common event schema;
+- policy API;
+- queue API;
+- fraudster API;
+- metric schema;
+- experiment configuration schema.
 
-## Definition of done
+Đây là hand-off sang [[IEEE-CIS Full Implementation Plan v1.0]].
 
-Core KLTN kỹ thuật hoàn thành khi:
-- [ ] integrated replay chạy local;
-- [ ] static fraudster full loop;
-- [ ] adaptive fraudster full loop;
-- [ ] 12 configurations chạy;
-- [ ] convergence/sensitivity xong;
-- [ ] verification tests pass;
-- [ ] result artifacts reproducible;
-- [ ] Methods và Results map 1-1 với code/experiment.
+## Definition of done cho Scenario A
+
+- [ ] integrated replay verified;
+- [ ] static full loop;
+- [ ] adaptive full loop;
+- [ ] 12 configs;
+- [ ] sensitivity/convergence;
+- [ ] common interfaces frozen;
+- [ ] result artifacts reproducible.
