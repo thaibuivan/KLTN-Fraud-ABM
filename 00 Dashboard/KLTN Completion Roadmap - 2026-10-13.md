@@ -50,13 +50,19 @@ Xente + IEEE-CIS
 ## Still required
 
 ### Xente final mechanism
-- [ ] feature-level counterfactual fraud generator / amount perturbation
-- [ ] rescore generated fraud through existing risk model
-- [ ] freeze BLOCK semantics
-- [ ] freeze unresolved-review outcome semantics
+- [x] feature-level counterfactual fraud generator from validation fraud regimes
+- [x] online past-only feature builder for generated fraud
+- [x] rescore generated fraud through saved Xente logistic model
+- [x] scenario-normalized fraudster reward scale added
+- [x] FIFO core / risk-priority robustness frozen
+- [x] tiered Capacity-aware policy semantics frozen
+- [x] unresolved-review exposure semantics defined
+- [x] 1-seed / 12-config feature-level smoke run completed
+- [ ] freeze BLOCK calibration after sensitivity
 - [ ] learning-rate sensitivity
 - [ ] epsilon sensitivity
-- [ ] capacity-aware congestion-parameter sensitivity
+- [ ] capacity-aware congestion-trigger sensitivity
+- [ ] degraded-score sensitivity on the new closed loop
 - [ ] run latest full test suite
 - [ ] freeze final Xente mechanism
 
@@ -105,8 +111,8 @@ Xente + IEEE-CIS
 
 ## Immediate next task
 
-1. replace score/value-template replay with feature-level Xente fraud amount perturbation;
-2. rescore through existing logistic risk model;
-3. sensitivity-test alpha / epsilon / congestion thresholds;
-4. freeze the Xente closed-loop model;
-5. run the 12 final Xente configurations.
+1. run a structured feature-level sensitivity pilot for BLOCK rate, alpha, epsilon and congestion triggers;
+2. run/verify the latest test suite and add missing adaptive integration tests;
+3. freeze the Xente closed-loop parameters;
+4. run the 12 final Xente configurations with convergence-based seeds;
+5. then move to the executable IEEE-CIS feature/risk pipeline.
