@@ -253,9 +253,22 @@ def main() -> None:
         "TransactionStartTime"
     ].max()
 
-    legitimate = test.loc[
+    legitimate_all = test.loc[
         test["FraudResult"].eq(0)
     ].copy()
+
+    # Both core policies are monotone: congestion can only raise the review
+    # threshold, and the BLOCK threshold is above the base review threshold.
+    # Therefore legitimate events below the base threshold can never enter
+    # REVIEW/BLOCK and cannot affect queue state. Skip them in the event loop
+    # for speed, then add them back to aggregate approval/intervention metrics.
+    legitimate = legitimate_all.loc[
+        legitimate_all["risk_probability"] >= base_threshold
+    ].copy()
+    skipped_legitimate_auto_approvals = (
+        len(legitimate_all) - len(legitimate)
+    )
+
     fraud_slots = (
         test.loc[
             test["FraudResult"].eq(1),
@@ -484,6 +497,34 @@ def main() -> None:
                             horizon_end
                         )
                     )
+                    summary["transactions"] += (
+                        skipped_legitimate_auto_approvals
+                    )
+                    summary["approve_count"] += (
+                        skipped_legitimate_auto_approvals
+                    )
+                    total_legitimate = len(legitimate_all)
+                    summary[
+                        "legitimate_intervention_rate"
+                    ] = (
+                        (
+                            summary[
+                                "legitimate_review_count"
+                            ]
+                            + summary[
+                                "legitimate_block_count"
+                            ]
+                        )
+                        / total_legitimate
+                        if total_legitimate
+                        else None
+                    )
+                    summary[
+                        "skipped_legitimate_auto_approvals"
+                    ] = (
+                        skipped_legitimate_auto_approvals
+                    )
+
                     summary.update(
                         {
                             "seed": seed,
