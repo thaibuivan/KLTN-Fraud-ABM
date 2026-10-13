@@ -35,9 +35,8 @@ from scripts.policy_queue_engine import (
 from scripts.simulate_alert_queue import (
     threshold_for_target_rate,
 )
-from scripts.train_xente_baseline import (
-    CATEGORICAL_FEATURES,
-    NUMERIC_FEATURES,
+from scripts.xente_fast_scorer import (
+    FastXenteLogisticScorer,
 )
 from scripts.xente_feature_level_fraud import (
     XenteFeatureLevelFraudGenerator,
@@ -217,6 +216,9 @@ def main() -> None:
         )
 
     model = joblib.load(args.model)
+    scorer = FastXenteLogisticScorer(
+        model
+    )
     generator = (
         XenteFeatureLevelFraudGenerator
         .from_validation_raw(
@@ -444,16 +446,10 @@ def main() -> None:
                                 raw_event
                             )
                         )
-                        x = pd.DataFrame(
-                            [features]
-                        )[
-                            NUMERIC_FEATURES
-                            + CATEGORICAL_FEATURES
-                        ]
-                        probability = float(
-                            model.predict_proba(x)[
-                                :, 1
-                            ][0]
+                        probability = (
+                            scorer.predict_proba_one(
+                                features
+                            )
                         )
 
                         action = engine.process_event(
