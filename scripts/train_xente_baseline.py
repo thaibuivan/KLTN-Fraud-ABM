@@ -91,7 +91,6 @@ def score_frame(
     y = frame["FraudResult"].to_numpy(dtype=int)
     p = model.predict_proba(x)[:, 1]
 
-    joblib.dump(model, output_dir / "model.joblib")
 
     metrics = {
         "split": name,
@@ -189,6 +188,7 @@ def main() -> None:
         train[NUMERIC_FEATURES + CATEGORICAL_FEATURES],
         train["FraudResult"],
     )
+    joblib.dump(model, output_dir / "model.joblib")
 
     results = []
     for split_name, frame in [
