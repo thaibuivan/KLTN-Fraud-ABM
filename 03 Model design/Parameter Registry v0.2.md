@@ -1,74 +1,99 @@
-# Parameter Registry v0.2
+# Parameter Registry v0.2 — Two-Scenario Version
 
 ## Nguyên tắc
 
-Mục tiêu không phải tìm một “con số đúng tuyệt đối” cho mọi parameter.
+Không tìm một “true parameter vector” cho mọi môi trường.
 
-Quan trọng hơn là xác định **parameter thuộc loại evidence nào** và có cần sensitivity-test hay không.
+Mỗi parameter phải có:
+- scenario;
+- source/evidence type;
+- role;
+- calibration status;
+- sensitivity priority.
 
-| Parameter | Ý nghĩa | Nguồn ban đầu | Vai trò | Ưu tiên sensitivity |
-|---|---|---|---|---|
-| fraud prevalence | tỷ lệ fraud | dataset | empirical input | thấp-vừa |
-| amount distribution | phân bố giá trị GD | dataset | empirical input | thấp |
-| temporal distribution | phân bố theo thời gian | dataset | empirical input | vừa |
-| customer transaction frequency | mức độ hoạt động | dataset nếu xác định được | state/input | vừa |
-| risk threshold | ngưỡng action | experiment | policy variable | cao |
-| queue discipline | FIFO / risk-priority | experiment | policy variable | cao |
-| analyst capacity | số case xử lý mỗi period | literature/scenario | operational uncertainty | cao |
-| review time | thời gian xử lý case | literature/scenario | operational uncertainty | cao |
-| analyst accuracy | độ chính xác review | literature/scenario | operational uncertainty | vừa-cao |
-| fraudster learning rate alpha | tốc độ học | explicit assumption | behavioral uncertainty | cao |
-| exploration epsilon | xác suất thử strategy khác | explicit assumption | behavioral uncertainty | cao |
-| strategy-switch mechanism | rule thích nghi | model design | structural uncertainty | cao |
-| block tolerance | số block trước dormancy | explicit assumption | behavioral uncertainty | cao |
-| dormancy duration | thời gian ngủ đông | explicit assumption | behavioral uncertainty | vừa |
-| review cost | chi phí xử lý | literature/scenario | economic uncertainty | vừa |
-| false-positive cost | chi phí can thiệp nhầm | literature/scenario | economic uncertainty | cao |
-| friction cost | customer inconvenience / abandonment proxy | literature/scenario | economic uncertainty | cao |
+## Shared vs scenario-specific
 
-## Bốn nhóm parameter
-
-### 1. Empirical parameter
-Estimate trực tiếp nếu dataset hỗ trợ.
-
-Ví dụ:
+### Scenario-specific empirical parameters
+Ước lượng riêng cho Xente và IEEE-CIS:
 - fraud prevalence;
-- amount distribution;
-- observable timing;
-- channel/product mix.
+- transaction amount distribution;
+- temporal/relative-time distribution;
+- product/context mix;
+- entity/history distributions;
+- risk-score distribution/calibration.
 
-### 2. Literature-informed operational parameter
-Dùng public literature hoặc plausible range.
+### Shared mechanism parameters
+Giữ cùng logic để comparison có ý nghĩa:
+- fraudster learning rule;
+- action space;
+- policy functional form;
+- queue mechanics;
+- metric definitions.
 
-Ví dụ:
-- analyst capacity;
-- review time;
-- analyst accuracy.
+Giá trị cụ thể của policy threshold/capacity có thể normalize theo scenario.
 
-### 3. Policy parameter
-Không cần estimate vì chính nó là biến thí nghiệm.
+## Registry
 
-Ví dụ:
-- threshold;
-- queue rule;
-- capacity-aware decision rule.
+| Parameter | Scenario | Nguồn | Loại | Sensitivity |
+|---|---|---|---|---|
+| fraud prevalence | Xente / IEEE riêng | dataset | empirical | thấp-vừa |
+| amount distribution | Xente / IEEE riêng | dataset | empirical | thấp |
+| temporal distribution | riêng | dataset | empirical | vừa |
+| customer/history frequency | Xente | dataset | empirical | vừa |
+| card/device/entity proxy distribution | IEEE | dataset | empirical/proxy | cao |
+| risk score / calibration | riêng | trained model | empirical/model | cao |
+| review threshold | normalize theo scenario | experiment | policy | cao |
+| block threshold | normalize theo scenario | experiment | policy | cao |
+| queue discipline | shared experiment | design | structural | cao |
+| analyst capacity | normalized load + literature/scenario | operational | uncertain | cao |
+| review time | literature/scenario | operational | uncertain | cao |
+| analyst accuracy | literature/scenario | operational | uncertain | vừa-cao |
+| learning rate alpha | shared rule | assumption | behavioral | cao |
+| exploration epsilon | shared rule | assumption | behavioral | cao |
+| strategy mapping | scenario-specific | data + design | structural | cao |
+| block tolerance | shared/scenario stress | assumption | behavioral | cao |
+| dormancy duration | assumption | behavioral | behavioral | vừa |
+| review cost | external | literature/scenario | economic | cao |
+| false-positive/friction cost | external | literature/scenario | economic | cao |
 
-### 4. Uncertain behavioral assumption
-Không được transaction data identify trực tiếp.
+## Bốn evidence classes
 
-Ví dụ:
-- fraudster learning rate;
-- exploration;
-- switching threshold;
-- dormancy.
+### 1. Empirical
+Từ dataset:
+- prevalence;
+- amount;
+- timing;
+- context mix;
+- history/proxy distributions.
 
-Các parameter này phải được báo cáo minh bạch và sensitivity-test.
+### 2. Literature-informed operational
+- analyst capacity/review time;
+- analyst accuracy;
+- cost ranges nếu dùng.
 
-## Quy tắc quan trọng
+### 3. Policy variable
+- thresholds;
+- congestion triggers;
+- queue rule.
 
-Nếu data không identify được parameter, **không được tạo false precision**.
+### 4. Behavioral assumption
+- alpha;
+- epsilon;
+- switching/dormancy.
 
-Hãy ghi rõ:
-- assumption;
-- plausible range;
-- sensitivity result.
+## Cross-scenario rule
+
+Không ép:
+- fraud prevalence bằng nhau;
+- amount scale bằng nhau;
+- customer/entity state giống nhau.
+
+Chỉ giữ common mechanism khi cần để so policy.
+
+## False precision rule
+
+Nếu parameter không được data identify:
+- ghi assumption;
+- khai báo range;
+- sensitivity-test;
+- không mô tả như empirical estimate.
