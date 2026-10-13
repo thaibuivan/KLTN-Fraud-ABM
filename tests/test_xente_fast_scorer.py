@@ -9,6 +9,11 @@ from scripts.train_xente_baseline import (
     NUMERIC_FEATURES,
     build_model,
 )
+from scripts.run_xente_model_robustness import (
+    build_model as build_variant_model,
+    NO_CURRENT_VALUE_NUMERIC,
+    AMOUNT_ONLY_NUMERIC,
+)
 from scripts.xente_fast_scorer import (
     FastXenteLogisticScorer,
 )
@@ -98,6 +103,76 @@ def test_fast_scorer_matches_pipeline():
             for row in sample.to_dict(
                 "records"
             )
+        ]
+    )
+
+    assert np.allclose(
+        expected,
+        actual,
+        rtol=1e-12,
+        atol=1e-12,
+    )
+
+
+def test_fast_scorer_matches_no_current_value_variant():
+    features = build_features(
+        synthetic_training()
+    )
+    model = build_variant_model(
+        NO_CURRENT_VALUE_NUMERIC,
+        CATEGORICAL_FEATURES,
+    )
+    x = features[
+        NO_CURRENT_VALUE_NUMERIC
+        + CATEGORICAL_FEATURES
+    ]
+    y = features["FraudResult"]
+    model.fit(x, y)
+
+    scorer = FastXenteLogisticScorer(model)
+    sample = features.iloc[[5, 18, 41, 73]]
+    expected = model.predict_proba(
+        sample[
+            NO_CURRENT_VALUE_NUMERIC
+            + CATEGORICAL_FEATURES
+        ]
+    )[:, 1]
+    actual = np.asarray(
+        [
+            scorer.predict_proba_one(row)
+            for row in sample.to_dict("records")
+        ]
+    )
+
+    assert np.allclose(
+        expected,
+        actual,
+        rtol=1e-12,
+        atol=1e-12,
+    )
+
+
+def test_fast_scorer_matches_amount_only_variant():
+    features = build_features(
+        synthetic_training()
+    )
+    model = build_variant_model(
+        AMOUNT_ONLY_NUMERIC,
+        [],
+    )
+    x = features[AMOUNT_ONLY_NUMERIC]
+    y = features["FraudResult"]
+    model.fit(x, y)
+
+    scorer = FastXenteLogisticScorer(model)
+    sample = features.iloc[[1, 21, 44, 70]]
+    expected = model.predict_proba(
+        sample[AMOUNT_ONLY_NUMERIC]
+    )[:, 1]
+    actual = np.asarray(
+        [
+            scorer.predict_proba_one(row)
+            for row in sample.to_dict("records")
         ]
     )
 
