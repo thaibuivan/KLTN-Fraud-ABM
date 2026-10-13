@@ -4,121 +4,94 @@
 
 Khóa luận phát triển từ FinRisk proposal theo hướng:
 - dynamic policy evaluation;
-- empirical grounding bằng Xente;
+- two-scenario empirical grounding;
 - persistent operational constraints;
 - adaptive adversarial feedback.
 
 Main RQ:
-> Các chính sách quản lý gian lận giao dịch hoạt động như thế nào khi fraudster thích nghi và analyst capacity bị giới hạn?
+> Các fraud-management policies hoạt động như thế nào khi fraudster thích nghi và analyst capacity bị giới hạn, và các kết luận có robust giữa hai transaction environments hay không?
 
-## 2. Data
+## 2. Data strategy
 
-### 2.1 Xente
-Mô tả:
-- transaction-level public dataset;
+### 2.1 Scenario A — Xente
+Customer/history-rich:
 - CustomerId;
 - TransactionStartTime;
 - Value/Amount;
-- product/provider/channel context;
+- Product/Provider/Channel;
 - FraudResult.
 
-### 2.2 Data role
-Không dùng Xente để identify mọi parameter.
+### 2.2 Scenario B — IEEE-CIS
+Identity/device-rich:
+- transaction amount/product;
+- card context;
+- address/email relations;
+- device/identity features;
+- count/time-delta/match/rich detector features;
+- isFraud;
+- relative TransactionDT.
 
-Xente dùng để ground:
-- transaction chronology;
-- customer history;
-- fraud prevalence;
-- amount/context distributions;
-- risk model.
+### 2.3 Không merge datasets
+Mỗi scenario có:
+- state representation riêng;
+- risk model riêng;
+- empirical parameters riêng;
+- cùng shared system architecture.
 
-Không có trực tiếp:
-- analyst capacity;
-- review time;
-- adaptive learning rate;
-- policy counterfactual;
-- friction cost.
+## 3. Scenario-specific state construction
 
-## 3. Empirical preprocessing
-
-### 3.1 Chronological ordering
-Không random split làm baseline chính.
-
-### 3.2 Leakage-safe customer state
-Past-only:
+### Xente
+Past-only customer history:
 - prior count;
-- prior Value mean/std;
-- inter-arrival gap;
+- Value mean/std;
+- inter-arrival;
 - rolling velocity;
-- product/channel history.
+- product/channel history;
+- cold-start handling.
 
-### 3.3 Cold-start
-Unseen/new customer state được xử lý bằng population/default state thay vì future information.
+### IEEE-CIS
+Entity/proxy state:
+- card/device/identity/address/email context;
+- chronological proxy history;
+- missing/unknown identity handling.
 
-## 4. Risk model
+Không gọi entity proxy là true customer.
 
-Baseline:
-- regularized logistic regression.
+## 4. Risk models
 
-Vai trò:
-- cung cấp risk_probability cho policy.
+Train riêng cho từng scenario.
 
-Không claim classifier novelty.
+Yêu cầu chung:
+- chronological validation;
+- probability/risk score output;
+- PR-AUC / ROC-AUC / calibration;
+- drift diagnostics;
+- degraded-score robustness.
 
-Validation:
-- chronological 70/15/15;
-- PR-AUC;
-- ROC-AUC;
-- Brier;
-- temporal robustness;
-- degraded-score sensitivity.
+Classifier novelty không phải contribution.
 
-## 5. Agent / system specification
+## 5. Shared system specification
 
-### 5.1 Customer
-Persistent state từ transaction history.
+- Fraudster: Static / Adaptive.
+- Detection: scenario-specific risk module.
+- Policy: Fixed / Capacity-aware.
+- Queue: persistent.
+- Analyst: pooled finite capacity.
+- Outcome module: shared semantics.
 
-### 5.2 Fraudster
-Static vs adaptive.
+## 6. Shared event loop
 
-Adaptive state:
-- strategy values;
-- recent response;
-- block/dormancy state.
-
-### 5.3 Detection system
-Module tạo risk score.
-
-### 5.4 Policy
-Core:
-- fixed-threshold;
-- capacity-aware.
-
-Optional:
-- cost-sensitive.
-
-### 5.5 Alert queue
-Persistent queue.
-
-Baseline discipline được freeze trước final experiment.
-
-### 5.6 Analyst
-Pooled finite service capacity.
-
-## 6. Event loop
-
-Mỗi event:
-1. transaction xuất hiện;
-2. state/features được xác định từ current/past information;
+1. event xuất hiện;
+2. scenario-specific state/features được cập nhật bằng current/past information;
 3. risk model tạo p_t;
 4. policy chọn APPROVE/REVIEW/BLOCK;
 5. REVIEW vào queue;
-6. analyst service diễn ra theo capacity;
-7. outcome được ghi;
-8. fraudster nhận feedback nếu event là fraud;
+6. analyst service;
+7. outcome;
+8. fraudster feedback nếu là fraud event;
 9. state update.
 
-## 7. Policy definitions
+## 7. Policies
 
 ### Fixed
 ```text
@@ -128,18 +101,16 @@ p ≥ T_block             → BLOCK
 ```
 
 ### Capacity-aware
-Review threshold phụ thuộc congestion state.
+Dùng congestion state, ví dụ backlog-hours:
 
-Backlog-hours proxy:
 ```math
 B_t = Q_t / \mu_t
 ```
 
-Khi B_t tăng, policy nâng review threshold theo experimental rule.
+để điều chỉnh review threshold.
 
 ## 8. Fraudster adaptation
 
-Value update:
 ```math
 V_s^{t+1}=V_s^t+\alpha(r_t-V_s^t)
 ```
@@ -147,57 +118,60 @@ V_s^{t+1}=V_s^t+\alpha(r_t-V_s^t)
 Strategy choice:
 - epsilon-greedy baseline.
 
-Không claim đây là exact fraud cognition.
+Giữ learning rule giống nhau giữa hai scenarios; strategy-to-feature mapping có thể khác.
 
 ## 9. Experimental design
 
-Core:
 ```text
-2 fraudster modes
-×
-2 policies
-×
-3 capacity levels
-= 12 configurations
+2 datasets
+× 2 fraudster modes
+× 2 policies
+× 3 capacity levels
+= 24 configurations
 ```
 
 Repeated seeds.
 
-## 10. Outcomes
+## 10. Cross-scenario comparison
+
+Không so raw scale máy móc.
+
+So:
+- adaptation penalty;
+- policy gain;
+- policy ranking;
+- congestion response;
+- relative effects.
+
+## 11. Outcomes
 
 Fraud:
-- successful fraud value;
-- prevented/intercepted fraud value;
-- fraud intercept/capture.
+- successful/prevented exposure;
+- capture/intercept rate.
 
-Customer:
-- legitimate review;
-- legitimate block;
+Customer/intervention:
+- legitimate review/block;
 - intervention rate.
 
 Operations:
 - backlog;
-- waiting time;
-- queue tails;
-- service load.
+- waiting-time distribution;
+- load/utilization proxy.
 
-## 11. Validation and uncertainty
+## 12. Validation and uncertainty
 
 - conceptual validation;
-- empirical input validation;
+- input/empirical validation;
 - code verification;
-- temporal score robustness;
+- temporal/drift checks;
 - stochastic replication;
 - parameter sensitivity;
 - structural sensitivity;
+- cross-scenario robustness;
 - extreme-condition tests.
 
-## 12. Claim boundaries
+## 13. Claim boundaries
 
-Kết luận là conditional simulation findings.
+Kết luận là conditional simulation findings theo từng scenario và across-scenario comparison.
 
-Không suy rộng trực tiếp thành:
-- production rule;
-- bank staffing;
-- universal policy optimum;
-- real fraudster cognition.
+Không suy rộng thành universal production rules.
