@@ -86,13 +86,6 @@ LOW_CARD_CATEGORICAL = [
     "id_12",
     "id_15",
     "id_16",
-    "id_28",
-    "id_29",
-    "id_34",
-    "id_35",
-    "id_36",
-    "id_37",
-    "id_38",
 ]
 
 
@@ -120,19 +113,19 @@ def fit_frequency_maps(
     return maps
 
 
-def apply_frequency_maps(
+def add_frequency_columns(
     frame: pd.DataFrame,
     maps: dict[str, dict],
-) -> pd.DataFrame:
-    out = frame.copy()
+) -> None:
     for column, mapping in maps.items():
-        key = out[column].astype("string").fillna(
+        key = frame[column].astype("string").fillna(
             "__MISSING__"
         )
-        out[f"freq_{column}"] = (
-            key.map(mapping).fillna(0.0).astype(float)
+        frame[f"freq_{column}"] = (
+            key.map(mapping)
+            .fillna(0.0)
+            .astype("float32")
         )
-    return out
 
 
 def build_model(
@@ -172,7 +165,8 @@ def build_model(
                 categorical,
                 categorical_features,
             ),
-        ]
+        ],
+        sparse_threshold=1.0,
     )
 
     classifier = LogisticRegression(
@@ -307,23 +301,13 @@ def main() -> None:
     train_end = int(n * 0.70)
     valid_end = int(n * 0.85)
 
-    train_raw = df.iloc[:train_end].copy()
-    valid_raw = df.iloc[train_end:valid_end].copy()
-    test_raw = df.iloc[valid_end:].copy()
-
+    train_raw = df.iloc[:train_end]
     freq_maps = fit_frequency_maps(train_raw)
-    train = apply_frequency_maps(
-        train_raw,
-        freq_maps,
-    )
-    valid = apply_frequency_maps(
-        valid_raw,
-        freq_maps,
-    )
-    test = apply_frequency_maps(
-        test_raw,
-        freq_maps,
-    )
+    add_frequency_columns(df, freq_maps)
+
+    train = df.iloc[:train_end]
+    valid = df.iloc[train_end:valid_end]
+    test = df.iloc[valid_end:]
 
     numeric_features = (
         BASE_NUMERIC
@@ -348,7 +332,7 @@ def main() -> None:
     )
 
     seen_train_entities = set(
-        train_raw["entity_proxy"].astype(str)
+        train["entity_proxy"].astype(str)
     )
 
     results = {}
