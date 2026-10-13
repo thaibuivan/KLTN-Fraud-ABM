@@ -1,9 +1,9 @@
-"""Interpretable adaptive-fraudster prototype.
+"""Interpretable fraudster-behavior mechanisms.
 
-This module is deliberately small and scenario-agnostic. It is not an empirical
-claim about real fraudster cognition. Parameters such as learning rate,
-exploration and dormancy are uncertain behavioral assumptions that must be
-sensitivity-tested before thesis conclusions are drawn.
+These mechanisms are deliberately small and scenario-agnostic. They are not
+empirical claims about real fraudster cognition. Parameters such as learning
+rate, exploration and dormancy are uncertain behavioral assumptions that must
+be sensitivity-tested before thesis conclusions are drawn.
 """
 
 from __future__ import annotations
@@ -126,3 +126,67 @@ class StaticFraudster(AdaptiveFraudster):
         if self.is_dormant(step):
             return None
         return self.current_strategy
+
+
+@dataclass
+class StaticMixtureFraudster:
+    """Non-adaptive comparator with a fixed strategy distribution.
+
+    This comparator preserves behavioral heterogeneity without allowing feedback
+    from APPROVE/REVIEW/BLOCK to change future strategy probabilities. It is
+    therefore cleaner than comparing an adaptive fraudster with one arbitrarily
+    fixed strategy when the empirical environment contains multiple regimes.
+    """
+
+    strategy_weights: Dict[str, float]
+    seed: Optional[int] = None
+
+    states: Dict[str, StrategyState] = field(init=False)
+    current_strategy: str = field(init=False)
+
+    def __post_init__(self) -> None:
+        if not self.strategy_weights:
+            raise ValueError("strategy_weights must not be empty")
+        if any(weight < 0 for weight in self.strategy_weights.values()):
+            raise ValueError("strategy weights must be non-negative")
+        total = sum(self.strategy_weights.values())
+        if total <= 0:
+            raise ValueError("strategy weights must sum to a positive value")
+
+        self._rng = random.Random(self.seed)
+        self._strategies = list(self.strategy_weights)
+        self._weights = [
+            self.strategy_weights[name] / total for name in self._strategies
+        ]
+        self.states = {
+            name: StrategyState() for name in self._strategies
+        }
+        self.current_strategy = self._strategies[0]
+
+    def choose_strategy(self, step: int) -> str:
+        del step
+        self.current_strategy = self._rng.choices(
+            self._strategies,
+            weights=self._weights,
+            k=1,
+        )[0]
+        return self.current_strategy
+
+    def observe(self, response: str, amount: float, step: int) -> float:
+        """Record outcomes without changing future strategy probabilities."""
+        del step
+        if response not in RESPONSES:
+            raise ValueError(f"Unknown response: {response}")
+        if amount < 0:
+            raise ValueError("amount must be non-negative")
+
+        state = self.states[self.current_strategy]
+        state.attempts += 1
+        if response == "APPROVE":
+            state.successes += 1
+            return float(amount)
+        if response == "CHALLENGE":
+            return -0.30 * float(amount)
+        if response == "REVIEW":
+            return -0.15 * float(amount)
+        return -1.0 * float(amount)
