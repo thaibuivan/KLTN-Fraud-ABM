@@ -1,140 +1,138 @@
 # Results and Discussion Outline v1.0
 
-## 1. Empirical Xente environment
+## 1. Empirical environments
 
+### 1.1 Xente
 Report:
-- data size / fraud rarity;
+- fraud rarity;
 - customer repetition;
 - cold-start;
 - Value/context signal;
 - temporal drift.
 
-Mục đích:
-chứng minh empirical environment được hiểu trước khi simulation.
-
-## 2. Risk-model baseline
-
+### 1.2 IEEE-CIS
 Report:
-- chronological validation/test;
-- PR-AUC / ROC-AUC / Brier;
-- temporal robustness;
-- full vs degraded score specifications.
+- fraud prevalence;
+- transaction amount/product;
+- card/device/identity coverage;
+- entity/proxy repetition;
+- missingness/drift;
+- feature interpretability limits.
 
-Discussion:
-- classifier performance không ổn định tuyệt đối;
-- Xente Value signal mạnh;
-- vì vậy policy conclusions phải stress-test score quality.
+### 1.3 Vì sao hai dataset bổ sung nhau
+Xente:
+- customer/history-rich.
+
+IEEE-CIS:
+- identity/device-risk-context-rich.
+
+## 2. Scenario-specific risk models
+
+Mỗi dataset:
+- chronological validation;
+- PR-AUC / ROC-AUC / calibration;
+- drift;
+- degraded-score robustness.
+
+Không so classifier như một competition.
 
 ## 3. Operational groundwork
 
-Tóm tắt pilot đã có:
+Tóm tắt Xente pilot đã có:
 - threshold/load;
 - capacity;
 - FIFO vs risk-priority;
-- stochastic service;
-- variable capacity;
+- service/capacity stochasticity;
 - starvation.
 
-Key interpretation:
-> same score stream + same capacity + different operational mechanism → different system outcome.
+Mục đích:
+justify persistent operational layer.
 
-Đây là nền cho full model, không phải final adaptive result.
+## 4. Integrated pre-adaptation replay
 
-## 4. Integrated policy replay
-
-So:
+Trong từng scenario:
 - Fixed;
 - Capacity-aware;
-trên cùng historical score stream trước adaptation.
-
-Report:
-- review rate;
-- backlog;
-- waiting time;
-- fraud interception;
-- legitimate interventions.
+- same normalized capacity protocol.
 
 Mục đích:
-verify policy mechanics trước khi thêm adversary adaptation.
+verify policy mechanics trước adaptive loop.
 
-## 5. RQ1 — Static vs Adaptive Fraudster
+## 5. RQ1 — Static vs Adaptive
 
-Giữ policy/capacity cố định.
+Cho Xente và IEEE:
+- successful fraud exposure;
+- capture/interception;
+- strategy shares;
+- score distribution shift;
+- alert/load shift.
 
-Report:
-- successful fraud value;
-- intercepted fraud;
-- strategy shares over time;
-- risk-score distribution shift;
-- alert load shift.
-
-Discussion:
-- adaptation có làm historical/static policy evaluation lạc quan không?
-- effect phụ thuộc capacity/policy thế nào?
+Sau đó so adaptation penalty giữa scenarios.
 
 ## 6. RQ2 — Fixed vs Capacity-aware
 
-Giữ fraudster mode và capacity cố định.
-
-Report:
+Trong mỗi scenario:
 - fraud outcome;
-- false-positive/intervention;
-- queue outcome.
+- intervention;
+- backlog/wait.
 
-Không ép một single winner.
-
-Dùng trade-off / Pareto interpretation nếu phù hợp.
+Sau đó so policy gain giữa scenarios.
 
 ## 7. RQ3 — Capacity interaction
 
 Low / Medium / High.
 
 Question:
-- policy ranking có đổi khi capacity khan hiếm?
-- adaptation effect có lớn hơn khi congestion cao?
+- policy ranking đổi không?
+- adaptive penalty tăng khi congestion tăng không?
 
-## 8. Main interaction
+## 8. RQ4 — Cross-scenario robustness
 
-Kiểm tra interaction quan trọng:
+Phân loại:
+- consistent;
+- environment-dependent;
+- weak/uncertain.
 
-> Adaptive fraudster × Capacity-aware policy × Low capacity.
+Không yêu cầu cùng một winner trong cả hai datasets.
 
-Nếu capacity-aware chỉ hữu ích trong overload, đó là conditional policy insight chứ không phải universal optimum.
+## 9. Main interaction discussion
 
-## 9. Behavioral sensitivity
+```text
+Dataset × Fraudster mode × Policy × Capacity
+```
 
-Alpha / epsilon / dormancy.
+Tập trung vào effect contrasts, không cần biến thesis thành bài factorial statistics thuần túy.
 
-Report:
-- policy ranking stability;
-- outcome ranges;
-- parameter regions làm conclusion đổi.
+## 10. Behavioral sensitivity
 
-## 10. Structural robustness
+- alpha;
+- epsilon;
+- dormancy nếu giữ.
+
+## 11. Structural robustness
 
 - FIFO vs risk-priority;
-- degraded score model;
+- degraded score;
 - stochastic service;
-- variable team capacity.
+- variable capacity.
 
-## 11. Optional cost-sensitive extension
+## 12. Optional cost-sensitive extension
 
-Chỉ report nếu cost assumptions đủ rõ.
+Chỉ report nếu cost assumptions đủ defensible.
 
-Không dùng một bộ arbitrary cost để tạo headline conclusion.
+## 13. Limitations
 
-## 12. Limitations
+- Xente-specific amount signal;
+- IEEE masked features / entity proxy;
+- no observed fraud cognition in either dataset;
+- analyst parameters external/scenario-based;
+- counterfactual generator assumptions;
+- no real-bank external validity claim.
 
-Ít nhất:
-- Xente-specific environment;
-- observed labels/history không identify fraud cognition;
-- analyst parameters partly scenario/literature-based;
-- adaptive generator is counterfactual;
-- no claim of real-bank external validity.
+## 14. Final discussion
 
-## 13. Final discussion
-
-Trả lời trực tiếp main RQ:
-- policy performance là dynamic/system-level;
-- adaptive behavior và limited review resources có thể thay đổi policy outcome;
-- robustness quan trọng hơn một point-estimate optimum.
+Trả lời:
+1. adaptation làm policy evaluation thay đổi ra sao?
+2. capacity-aware có ích trong điều kiện nào?
+3. analyst scarcity thay đổi ranking ra sao?
+4. effect nào robust giữa Xente và IEEE, effect nào environment-dependent?
