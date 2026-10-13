@@ -1,14 +1,13 @@
-"""Build leakage-safe IEEE-CIS features for the thesis Scenario B.
+"""Build a memory-conscious, leakage-safe IEEE-CIS feature table.
 
-This script implements the decisions already established in 02_EDA_IEEE_CIS:
-- IEEE has no true CustomerId;
-- card1 + addr1 is used only as a persistent ENTITY PROXY;
+This is the executable implementation of decisions already made in the completed
+IEEE-CIS EDA. It does not redo EDA.
+
+Core boundary:
+- card1+addr1 is an entity proxy, never called a true customer;
 - TransactionDT is relative time;
-- masked C/D/M/V fields may support Detection but are not interpreted as
-  explicit fraudster actions;
-- entity-history features use only earlier transactions.
-
-Raw competition data remain local and are not committed to GitHub.
+- masked C/D/M/V fields may feed Detection but are not interpreted as actions;
+- history features use only earlier events for the proxy entity.
 """
 
 from __future__ import annotations
@@ -35,10 +34,13 @@ TRANSACTION_COLUMNS = [
     "TransactionDT",
     "TransactionAmt",
     "ProductCD",
-    "card1", "card2", "card3", "card4", "card5", "card6",
-    "addr1", "addr2",
-    "dist1", "dist2",
-    "P_emaildomain", "R_emaildomain",
+    "card1",
+    "card4",
+    "card6",
+    "addr1",
+    "dist1",
+    "P_emaildomain",
+    "R_emaildomain",
     *C_COLUMNS,
     *D_COLUMNS,
     *M_COLUMNS,
@@ -46,13 +48,11 @@ TRANSACTION_COLUMNS = [
 ]
 
 IDENTITY_NUMERIC = [
-    "id_01", "id_02", "id_05", "id_06", "id_11",
-    "id_13", "id_17", "id_19", "id_20",
+    "id_01", "id_02", "id_05", "id_06",
 ]
 IDENTITY_CATEGORICAL = [
-    "id_12", "id_15", "id_16", "id_28", "id_29",
-    "id_31", "id_33", "id_34", "id_35", "id_36",
-    "id_37", "id_38",
+    "id_12", "id_15", "id_16",
+    "id_31", "id_33",
     "DeviceType", "DeviceInfo",
 ]
 IDENTITY_COLUMNS = [
@@ -61,12 +61,37 @@ IDENTITY_COLUMNS = [
     *IDENTITY_CATEGORICAL,
 ]
 
+TRANSACTION_DTYPES: dict[str, str] = {
+    "TransactionID": "int64",
+    "isFraud": "int8",
+    "TransactionDT": "int64",
+    "TransactionAmt": "float32",
+    "card1": "float32",
+    "addr1": "float32",
+    "dist1": "float32",
+}
+for column in C_COLUMNS + D_COLUMNS + SELECTED_V:
+    TRANSACTION_DTYPES[column] = "float32"
+for column in [
+    "ProductCD", "card4", "card6",
+    "P_emaildomain", "R_emaildomain",
+    *M_COLUMNS,
+]:
+    TRANSACTION_DTYPES[column] = "category"
 
-def entity_proxy(
+IDENTITY_DTYPES: dict[str, str] = {
+    "TransactionID": "int64",
+}
+for column in IDENTITY_NUMERIC:
+    IDENTITY_DTYPES[column] = "float32"
+for column in IDENTITY_CATEGORICAL:
+    IDENTITY_DTYPES[column] = "category"
+
+
+def make_entity_proxy(
     card1: pd.Series,
     addr1: pd.Series,
 ) -> pd.Series:
-    """Create a card1+addr1 proxy without claiming true customer identity."""
     card = (
         card1.astype("Int64")
         .astype("string")
@@ -77,22 +102,22 @@ def entity_proxy(
         .astype("string")
         .fillna("__MISSING_ADDR1__")
     )
-    return card + "|" + addr
+    return (card + "|" + addr).astype("category")
 
 
 def build_features(
     transactions: pd.DataFrame,
     identity: pd.DataFrame,
 ) -> pd.DataFrame:
-    data = transactions.copy()
+    identity = identity.copy()
+    identity["identity_available"] = np.int8(1)
 
-    identity_small = identity.copy()
-    identity_small["identity_available"] = 1
-    data = data.merge(
-        identity_small,
+    data = transactions.merge(
+        identity,
         on="TransactionID",
         how="left",
         validate="one_to_one",
+        sort=False,
     )
     data["identity_available"] = (
         data["identity_available"]
@@ -105,70 +130,78 @@ def build_features(
         kind="stable",
     ).reset_index(drop=True)
 
-    data["entity_proxy"] = entity_proxy(
+    data["entity_proxy"] = make_entity_proxy(
         data["card1"],
         data["addr1"],
     )
 
-    # Relative-time features. They preserve timing structure but have no
-    # calendar-date interpretation.
     data["day_index"] = (
         data["TransactionDT"] // 86400
-    ).astype("int32")
+    ).astype("int16")
     data["hour_proxy"] = (
         (data["TransactionDT"] % 86400) / 3600.0
-    )
+    ).astype("float32")
     data["log_transaction_amt"] = np.log1p(
         data["TransactionAmt"].clip(lower=0)
-    )
+    ).astype("float32")
 
-    # Past-only persistent entity state.
-    grouped = data.groupby(
-        "entity_proxy",
-        sort=False,
-        observed=True,
-    )
-    data["prior_tx_count"] = grouped.cumcount()
-
-    prior_sum = (
-        grouped["TransactionAmt"].cumsum()
-        - data["TransactionAmt"]
-    )
-    prior_sumsq = (
-        data.assign(
-            _amt_sq=data["TransactionAmt"] ** 2
-        )
-        .groupby(
+    proxy = data["entity_proxy"]
+    data["prior_tx_count"] = (
+        data.groupby(
             "entity_proxy",
             sort=False,
             observed=True,
-        )["_amt_sq"]
-        .cumsum()
-        - data["TransactionAmt"] ** 2
+        ).cumcount()
+        .astype("int32")
     )
 
-    count = data["prior_tx_count"].astype(float)
-    data["prior_amount_mean"] = np.where(
+    amount = data["TransactionAmt"].astype("float64")
+    prior_sum = (
+        amount.groupby(
+            proxy,
+            sort=False,
+            observed=True,
+        ).cumsum()
+        - amount
+    )
+    amount_sq = amount * amount
+    prior_sumsq = (
+        amount_sq.groupby(
+            proxy,
+            sort=False,
+            observed=True,
+        ).cumsum()
+        - amount_sq
+    )
+
+    count = data["prior_tx_count"].astype("float64")
+    prior_mean = np.where(
         count > 0,
         prior_sum / count,
         np.nan,
     )
     prior_var = np.where(
         count > 0,
-        prior_sumsq / count
-        - data["prior_amount_mean"] ** 2,
+        prior_sumsq / count - prior_mean**2,
         np.nan,
     )
+
+    data["prior_amount_mean"] = prior_mean.astype("float32")
     data["prior_amount_std"] = np.sqrt(
         np.maximum(prior_var, 0)
+    ).astype("float32")
+
+    data["gap_seconds"] = (
+        data.groupby(
+            "entity_proxy",
+            sort=False,
+            observed=True,
+        )["TransactionDT"]
+        .diff()
+        .astype("float32")
     )
 
-    data["gap_seconds"] = grouped[
-        "TransactionDT"
-    ].diff()
-
-    # Prior same-product share for the proxy entity.
-    data["prior_same_product_count"] = (
+    same_product = (
         data.groupby(
             ["entity_proxy", "ProductCD"],
             sort=False,
@@ -177,43 +210,46 @@ def build_features(
     )
     data["prior_product_share"] = np.where(
         data["prior_tx_count"] > 0,
-        data["prior_same_product_count"]
-        / data["prior_tx_count"],
+        same_product / data["prior_tx_count"],
         0.0,
-    )
+    ).astype("float32")
 
     data["log_prior_tx_count"] = np.log1p(
         data["prior_tx_count"]
-    )
+    ).astype("float32")
     data["log_prior_amount_mean"] = np.log1p(
         data["prior_amount_mean"].clip(lower=0)
-    )
+    ).astype("float32")
     data["log_prior_amount_std"] = np.log1p(
         data["prior_amount_std"].clip(lower=0)
-    )
+    ).astype("float32")
     data["log_gap_seconds"] = np.log1p(
         data["gap_seconds"].clip(lower=0)
-    )
-    data["amount_ratio_prior_mean"] = (
+    ).astype("float32")
+
+    ratio = (
         data["TransactionAmt"]
         / data["prior_amount_mean"]
     ).replace([np.inf, -np.inf], np.nan)
-    data["amount_ratio_clip"] = data[
-        "amount_ratio_prior_mean"
-    ].clip(upper=20)
+    data["amount_ratio_clip"] = ratio.clip(
+        upper=20
+    ).astype("float32")
 
     data["cold_start_entity"] = (
         data["prior_tx_count"].eq(0).astype("int8")
     )
 
-    # Missingness is itself empirically informative in IEEE-CIS.
-    identity_feature_cols = [
-        c for c in IDENTITY_COLUMNS
-        if c != "TransactionID"
+    identity_features = [
+        column
+        for column in IDENTITY_COLUMNS
+        if column != "TransactionID"
     ]
-    data["identity_missing_count"] = data[
-        identity_feature_cols
-    ].isna().sum(axis=1)
+    data["identity_missing_count"] = (
+        data[identity_features]
+        .isna()
+        .sum(axis=1)
+        .astype("int8")
+    )
 
     detector_context = (
         C_COLUMNS
@@ -221,9 +257,12 @@ def build_features(
         + M_COLUMNS
         + SELECTED_V
     )
-    data["detector_missing_count"] = data[
-        detector_context
-    ].isna().sum(axis=1)
+    data["detector_missing_count"] = (
+        data[detector_context]
+        .isna()
+        .sum(axis=1)
+        .astype("int8")
+    )
 
     data["email_both_missing"] = (
         data["P_emaildomain"].isna()
@@ -241,14 +280,14 @@ def build_features(
 
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser()
-    p.add_argument("--transaction", required=True)
-    p.add_argument("--identity", required=True)
-    p.add_argument(
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--transaction", required=True)
+    parser.add_argument("--identity", required=True)
+    parser.add_argument(
         "--output",
         default="data/interim/ieee_features.pkl",
     )
-    return p.parse_args()
+    return parser.parse_args()
 
 
 def main() -> None:
@@ -257,11 +296,13 @@ def main() -> None:
     transactions = pd.read_csv(
         args.transaction,
         usecols=TRANSACTION_COLUMNS,
+        dtype=TRANSACTION_DTYPES,
         low_memory=False,
     )
     identity = pd.read_csv(
         args.identity,
         usecols=IDENTITY_COLUMNS,
+        dtype=IDENTITY_DTYPES,
         low_memory=False,
     )
 
@@ -271,24 +312,26 @@ def main() -> None:
     )
 
     output = Path(args.output)
-    output.parent.mkdir(parents=True, exist_ok=True)
-
+    output.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
     if output.suffix.lower() in {".pkl", ".pickle"}:
         features.to_pickle(output)
     else:
         features.to_csv(output, index=False)
 
     print(
-        f"Wrote {output} with "
-        f"{len(features):,} rows and "
+        f"Wrote {output}: "
+        f"{len(features):,} rows × "
         f"{features.shape[1]} columns"
     )
     print(
-        "Unique entity proxies:",
+        "unique_entity_proxies=",
         features["entity_proxy"].nunique(),
     )
     print(
-        "Fraud rate:",
+        "fraud_rate=",
         features["isFraud"].mean(),
     )
 
