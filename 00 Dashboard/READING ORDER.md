@@ -2,69 +2,75 @@
 
 Không đọc repo theo folder. Đọc theo research pipeline.
 
-## 1. Hiểu KLTN phát triển từ đề án như thế nào
+## 1. Hiểu KLTN phát triển từ đề án
 
 1. [[De an to KLTN - Development Map]]
-2. [[Current Direction - 2026-10-11]]
-3. [[Research Design v1.1 - Develop from FinRisk Proposal]]
+2. [[Research Design v1.1 - Develop from FinRisk Proposal]]
+3. [[Shared Two-Scenario Architecture v1.0]]
 
-Sau ba file này phải trả lời được:
+Sau đó phải trả lời được:
 - KLTN giữ gì từ đề án?
 - nâng cấp gì?
-- RQ chính là gì?
-- Xente dùng ở đâu?
-- adaptive fraudster dùng để làm gì?
+- vì sao cần cả Xente và IEEE-CIS?
+- phần nào dùng chung, phần nào scenario-specific?
 
-## 2. Hiểu full model
+## 2. Hiểu hai scenario
 
+### Xente
 4. [[Xente Full Model Specification v1.0]]
-5. [[Parameter Registry v0.2]]
-6. [[Adaptive Fraudster Design v0.1]]
-7. [[Queue and Analyst Service Design v0.1]]
-8. [[Validation Plan v1.0]]
+5. [[Xente Full Implementation Plan v1.0]]
+6. [[Xente Empirical Profile]]
 
-## 3. Hiểu thí nghiệm cuối
+### IEEE-CIS
+7. [[IEEE-CIS Full Implementation Plan v1.0]]
+8. đọc notebook EDA IEEE-CIS trong Library / working files khi cần đối chiếu chi tiết.
 
-9. [[Final Core Experiment Grid v1.0]]
+## 3. Hiểu mechanism chung
+
+9. [[Parameter Registry v0.2]]
+10. [[Adaptive Fraudster Design v0.1]]
+11. [[Queue and Analyst Service Design v0.1]]
+12. [[Validation Plan v1.0]]
+
+## 4. Hiểu experiment cuối
+
+13. [[Final Core Experiment Grid v1.0]]
+14. [[Cross-Scenario Comparison Plan v1.0]]
 
 Core:
 
 ```text
-Static / Adaptive
-×
-Fixed / Capacity-aware
-×
-Low / Medium / High capacity
-= 12 configurations
+Xente / IEEE-CIS
+× Static / Adaptive
+× Fixed / Capacity-aware
+× Low / Medium / High capacity
+= 24 configurations
 ```
 
-## 4. Sau đó mới đọc evidence Xente đã hoàn thành
+## 5. Xente groundwork đã hoàn thành
 
-1. [[Xente Empirical Profile]]
-2. [[Xente Baseline Risk Model Feasibility]]
-3. [[Xente Queue Pilot v0.1]]
-4. [[Xente Robustness Pack v0.1]]
-5. [[Xente Alert-rate and Starvation Sensitivity v0.1]]
-6. [[Xente Variable Team Capacity Sensitivity v0.1]]
+Đọc sau khi hiểu model:
+- [[Xente Queue Pilot v0.1]]
+- [[Xente Robustness Pack v0.1]]
+- [[Xente Alert-rate and Starvation Sensitivity v0.1]]
+- [[Xente Variable Team Capacity Sensitivity v0.1]]
 
-Các file này là empirical/operational groundwork, chưa phải final adaptive-ABM result.
-
-## 5. Code pipeline
+## 6. Code pipeline
 
 ```text
-profile_xente.py
-    ↓
-build_xente_features.py
-    ↓
-train_xente_baseline.py
-    ↓
-fraud_policies.py
-    ↓
-simulate_alert_queue.py
-    ↓
-adaptive_fraudster.py
-    ↓
-[INTEGRATION ENGINE — next]
+Scenario-specific preprocessing
+        ↓
+Scenario-specific risk score
+        ↓
+common policy interface
+        ↓
+common policy/queue engine
+        ↓
+static/adaptive fraudster
+        ↓
+scenario runner
+        ↓
+cross-scenario aggregator
 ```
 
 ## File cũ không dùng làm source of truth
@@ -77,5 +83,3 @@ adaptive_fraudster.py
 - [[Validation Plan v0.1]]
 - [[Methodology Skeleton v0.1]]
 - [[Results and Discussion Outline v0.1]]
-
-Giữ để truy lịch sử hoặc tái sử dụng nội dung; không dùng để quyết định scope hiện tại.
