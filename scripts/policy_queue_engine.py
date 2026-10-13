@@ -61,7 +61,8 @@ class PolicyQueueEngine:
         )
 
     def drain_until(self, time_limit) -> None:
-        time_limit = pd.to_datetime(time_limit, utc=True)
+        if not isinstance(time_limit, pd.Timestamp):
+            time_limit = pd.to_datetime(time_limit, utc=True)
 
         if self.service_duration is None:
             return
@@ -101,10 +102,12 @@ class PolicyQueueEngine:
             self.server_available = service_end
 
     def process_event(self, event: dict) -> Action:
-        event_time = pd.to_datetime(
-            event["TransactionStartTime"],
-            utc=True,
-        )
+        event_time = event["TransactionStartTime"]
+        if not isinstance(event_time, pd.Timestamp):
+            event_time = pd.to_datetime(
+                event_time,
+                utc=True,
+            )
 
         if self.server_available is None:
             self.server_available = event_time
