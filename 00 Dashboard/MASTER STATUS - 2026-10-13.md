@@ -206,149 +206,165 @@ Xente replay milestone:
 
 Do not repeat this pilot unless engine semantics change.
 
-## 8. Adaptive fraudster — FIRST CLOSED-LOOP PILOT DONE + FEATURE-LEVEL UPGRADE IN PROGRESS
+## 8. Adaptive fraudster — FEATURE-LEVEL CLOSED LOOP DONE ON XENTE
 
 Exists:
 - Adaptive Fraudster Design v0.1
 - adaptive_fraudster.py
-- StaticFraudster
-- StaticMixtureFraudster
-- xente_fraud_templates.py
-- simulate_adaptive_policy_system.py
-- run_xente_static_vs_adaptive_policy.py
-- tests for adaptive/static/template mechanisms
+- StaticFraudster / StaticMixtureFraudster
+- XenteOnlineFeatureBuilder
+- XenteFeatureLevelFraudGenerator
+- FastXenteLogisticScorer
+- PolicyQueueEngine
+- run_xente_feature_level_static_adaptive.py
 
-Closed-loop pilot:
+Historical integration notes:
 - [[Xente Static-Adaptive Integration Pilot v0.1]]
+- [[Xente Feature-Level Adaptive Smoke v0.1]]
 
-Pilot mechanism:
+Current mechanism:
+
 ```text
-validation fraud template regime
-→ Static / Adaptive strategy choice
-→ score/value
+validation fraud regime
+→ Static / Adaptive strategy
+→ raw Xente-compatible fraud event
+→ online past-only fraudster history
+→ risk-model rescoring
 → Fixed / Capacity-aware
-→ queue
-→ response
-→ reward
+→ persistent FIFO queue
+→ APPROVE / REVIEW / BLOCK
+→ normalized reward
 → next strategy
 ```
 
-Observed pilot behavior:
-- adaptive strategy shifted strongly toward the lower-value/lower-score regime;
-- static replay and adaptive replay produced materially different policy outcomes;
-- naive congestion-driven threshold raising could create an evasion channel in this pilot.
+Important upgrade:
+- generated fraud no longer inherits a historical risk score;
+- generated fraud is rescored from its generated raw context + synthetic past-only history;
+- reward is normalized by scenario-level fraud value scale;
+- dormancy is off in the core model so fraud-attempt count remains comparable.
 
-Important:
-- the historical pilot is **not final thesis evidence**;
-- the old generator sampled empirical score/value templates and is now treated as a historical integration check;
-- reward/congestion parameters are assumption-dependent;
-- Xente Value separation is unusually strong.
+## 9. Xente final scenario — MAIN CORE RUN + SENSITIVITY + DEGRADED-SCORE ROBUSTNESS DONE
 
-New refinement already implemented:
-- adaptive reward now supports scenario-normalized `reward_scale`;
-- `XenteOnlineFeatureBuilder` reproduces the batch past-only feature logic for generated fraud events;
-- `XenteFeatureLevelFraudGenerator` resamples raw fraud context from validation fraud regimes;
-- generated fraud is **rescored through the saved Xente risk model** instead of inheriting a historical risk score;
-- `PolicyQueueEngine` provides a stateful queue/policy engine for adaptive simulation;
-- `run_xente_feature_level_static_adaptive.py` runs the new feature-level closed loop.
-
-Verification completed:
-- online feature builder matched the batch builder on an empirical Xente subset;
-- a 1-seed / 12-configuration smoke run completed successfully;
-- the smoke run exposed an important count-vs-value trade-off: adaptation can reduce capture rate while also shifting toward lower-value fraud, so final reporting must include both count-based and value-based outcomes.
-
-Not completed yet:
-- multi-seed feature-level experiment;
-- sensitivity/convergence;
-- final BLOCK calibration.
-
-## 9. Xente final scenario — PARTIAL, NOW IN MODEL-REFINEMENT PHASE
-
-Already done:
-- EDA;
-- Data-to-ABM;
-- risk model;
+Completed:
+- EDA / Data-to-ABM;
+- risk baseline + temporal checks;
 - queue/capacity groundwork;
 - empirical Fixed vs Capacity-aware replay;
-- first Static vs Adaptive closed-loop pilot;
-- validation-based template generator;
-- 30-seed integration pilot.
+- feature-level Static vs Adaptive closed loop;
+- BLOCK / alpha / epsilon / congestion sensitivity;
+- 50-seed, 12-configuration main Xente core run;
+- 30-seed degraded-score feature-level robustness;
+- Monte Carlo convergence analysis;
+- operational/adaptive parameter freeze;
+- current CI test suite passing.
 
-Still needed before final 12 Xente configs:
-1. sensitivity-test / freeze BLOCK review-rate calibration;
-2. run multi-seed feature-level Static vs Adaptive pilot;
-3. sensitivity-test learning rate / epsilon;
-4. sensitivity-test capacity-aware congestion triggers;
-5. test at least one degraded-score specification on the frozen mechanism;
-6. run full current test suite + adaptive integration tests;
-7. freeze final Xente mechanism and parameter registry;
-8. run 12 Xente core configurations with convergence-based seeds;
-9. final Xente tables/figures.
+Key result files:
+- [[Xente Feature-Level Core Run v0.2]]
+- [[Xente Feature-Level Sensitivity v0.1]]
+- [[Xente Feature-Level Degraded-Score Robustness v0.1]]
+- [[Operational Core Freeze v1.0]]
 
-## 10. IEEE-CIS final scenario — PARTIAL
+Current frozen central Xente settings:
+- base review rate = 1.00% validation tail;
+- Capacity-aware review tiers = 1.00% / 0.75% / 0.50%;
+- BLOCK = top 0.10% validation tail;
+- Low / Medium / High capacity = 0.75 / 1.00 / 1.25 × validation reference load;
+- FIFO = core queue;
+- risk-priority = structural robustness;
+- alpha = 0.15;
+- epsilon = 0.10;
+- congestion triggers = 24 / 72 backlog-hours;
+- dormancy = off;
+- reward scale = validation-fraud median Value.
+
+50-seed convergence:
+- fraud-intercept relative MCSE <= about 1.6%;
+- backlog <= about 1.1%;
+- legitimate intervention <= about 0.3%;
+- value exposure remains noisier, up to about 7.3%, so report intervals.
+
+Current Xente interpretation:
+- adaptive behavior strongly changes strategy composition;
+- analyst capacity consistently matters;
+- Capacity-aware robustly reduces backlog / intervention under scarcity;
+- the fraud-control effect of Capacity-aware is conditional and changes with score quality;
+- count-based and value-based fraud outcomes can move in opposite directions.
+
+Still needed for Xente before final thesis submission:
+1. final publication-quality tables / figures;
+2. optional extreme-condition/adaptive integration tests if needed for appendix;
+3. final parameter-registry snapshot;
+4. incorporate results into Methods / Results / Discussion.
+
+**Do not rerun the main Xente design unless code semantics or frozen parameters change.**
+
+## 10. IEEE-CIS final scenario — NEXT MAJOR IMPLEMENTATION BLOCK
 
 Already done:
 - full EDA;
 - Data-to-ABM mapping;
 - entity-proxy analysis;
-- scenario role;
-- common adapter code;
-- policy replay runner skeleton.
+- two-scenario role;
+- common canonical adapter;
+- shared policy/queue architecture.
 
 Still needed:
-1. turn notebook analysis into executable chronological feature pipeline;
-2. freeze entity proxy definition;
+1. build executable chronological IEEE feature pipeline from the completed EDA;
+2. freeze entity proxy used for persistent state;
 3. train/validate IEEE scenario-specific risk model;
-4. generate risk_probability outputs;
-5. run integrated Fixed vs Capacity-aware replay;
-6. define IEEE-grounded fraud strategy mapping;
-7. integrate Static fraudster;
-8. integrate Adaptive fraudster;
-9. run 12 core configurations;
-10. seed convergence/sensitivity;
-11. final IEEE tables/figures.
+4. generate validation/test risk_probability outputs;
+5. run Fixed vs Capacity-aware empirical replay;
+6. build IEEE feature-level fraud strategy generator;
+7. reuse Static / Adaptive learning mechanism with IEEE-normalized reward scale;
+8. run 12 IEEE core configurations;
+9. seed convergence + targeted sensitivity;
+10. final IEEE tables/figures.
 
-## 11. Cross-scenario design — DESIGN DONE, RESULTS NOT RUN
+## 11. Cross-scenario design — DESIGN DONE, RESULTS WAITING FOR IEEE
 
 Design exists:
 - Shared Two-Scenario Architecture v1.0
 - Final Core Experiment Grid v1.0
 - Cross-Scenario Comparison Plan v1.0
 
-Compare:
+After IEEE is complete, compare:
 - adaptation penalty;
-- capacity-aware policy gain;
+- Capacity-aware policy gain;
 - policy ranking;
-- congestion sensitivity.
+- congestion sensitivity;
+- count/value trade-offs.
 
-Still needed:
-- execute 12 Xente + 12 IEEE;
-- aggregate seed-level uncertainty;
-- classify conclusions:
-  - consistent;
-  - environment-dependent;
-  - uncertain.
+Classify each conclusion:
+- consistent;
+- environment-dependent;
+- uncertain.
 
-## 12. Validation — PARTIAL
+## 12. Validation — CURRENT CODE TEST SUITE PASSING
 
-DONE:
+Done:
 - validation framework designed;
 - Xente temporal robustness;
 - Xente score structural sensitivity;
-- queue unit tests documented as passed in earlier groundwork;
-- policy tests written;
-- integrated-system tests written;
-- scenario-adapter tests written;
-- static-mixture/template tests written.
+- queue verification;
+- policy tests;
+- integrated policy-system tests;
+- scenario-adapter tests;
+- online-feature equivalence test;
+- fast-scorer equivalence tests;
+- adaptive/static/template tests;
+- degraded model fast-scorer tests;
+- GitHub Actions CI configured.
 
-PENDING:
-- run the current full test suite from the latest branch;
-- adaptive full-loop verification tests;
-- extreme-condition tests;
-- final seed convergence;
-- cross-scenario validation summary.
+Latest verified CI result:
+- **37 tests passed** before the later degraded-scorer test additions;
+- subsequent CI runs after the scorer/model-variant changes are also succeeding.
 
-## 13. Literature / parameter grounding — PARTIAL but sufficient to continue implementation
+Still needed by final thesis:
+- explicit cross-scenario validation summary;
+- final extreme-condition test summary if included in appendix;
+- final seed-convergence report for IEEE.
+
+## 13. Literature / parameter grounding — PARTIAL but sufficient for implementation
 
 Existing notes:
 - AML-CFSim 2025;
@@ -359,12 +375,12 @@ Existing notes:
 - Operational Parameter Grounding v0.1;
 - Parameter Registry v0.2.
 
-Still needed before final writing:
-- freeze exact ranges actually used;
-- cite final sources for those ranges;
-- record every final simulation parameter in a final registry snapshot.
+Before final writing:
+- update Parameter Registry with the actual frozen values/ranges used;
+- distinguish empirical / policy / operational / behavioral assumptions;
+- attach final citations to the parameters discussed in text.
 
-## 14. Writing — OUTLINE DONE, thesis text NOT DONE
+## 14. Writing — OUTLINE DONE, FINAL PROSE NOT DONE
 
 Already exists:
 - Research Design v1.1;
@@ -375,58 +391,56 @@ Already exists:
 Still needed:
 - Introduction;
 - Literature Review;
-- Data section;
+- Data;
 - full Methodology;
-- Results;
-- Discussion;
+- Xente Results;
+- IEEE Results;
+- Cross-scenario Discussion;
 - Limitations;
 - Conclusion;
 - appendices;
 - references.
 
-Do not write final Results before final simulations are frozen.
+Xente result prose can now be drafted, but final thesis Results should wait until IEEE is also completed so the cross-scenario narrative stays coherent.
 
 ## 15. Things explicitly NOT to redo
 
 1. Do not redo Xente EDA.
 2. Do not redo IEEE-CIS EDA.
-3. Do not re-decide whether Xente + IEEE are core: they are both core.
-4. Do not redesign the whole conceptual model again.
+3. Do not re-decide whether Xente + IEEE are core: both are core.
+4. Do not redesign the conceptual model again.
 5. Do not rebuild Xente customer-history features from scratch.
-6. Do not rerun FIFO vs risk-priority just to prove queue priority matters again.
-7. Do not rerun the integrated Fixed vs Capacity-aware Xente pilot unless semantics change.
-8. Do not search for a new main dataset unless supervisor changes scope.
-9. Do not add Deep RL unless the current heuristic adaptation is demonstrably insufficient.
-10. Do not add more policy families before Fixed + Capacity-aware are completed.
-11. Do not merge Xente and IEEE into one dataset.
+6. Do not rerun FIFO vs risk-priority just to prove queue priority matters.
+7. Do not rerun the old score/value-template adaptive pilot.
+8. Do not rerun Xente main 12 configurations unless semantics/parameters change.
+9. Do not add Deep RL to the core.
+10. Do not add more policy families before the two core scenarios are complete.
+11. Do not merge Xente and IEEE.
 
 ## 16. Critical path from NOW
 
 ```text
-A. Refine/freeze Xente closed-loop mechanism
+A. Build executable IEEE-CIS chronological feature/state pipeline
         ↓
-B. Run sensitivity on adaptation + capacity-aware parameters
+B. Train + validate IEEE risk model
         ↓
-C. Run 12 final Xente configurations
+C. Run IEEE empirical policy replay
         ↓
-D. Convert IEEE EDA into executable feature/risk pipeline
+D. Build IEEE feature-level Static / Adaptive closed loop
         ↓
-E. Run same Static → Adaptive architecture on IEEE
+E. Run 12 IEEE configurations + convergence/sensitivity
         ↓
-F. Run 12 IEEE configurations
+F. Cross-scenario comparison with Xente
         ↓
-G. Cross-scenario comparison
+G. Final parameter registry + validation appendix
         ↓
-H. Final validation + convergence
-        ↓
-I. Write final thesis
+H. Write final KLTN
 ```
 
 ## 17. Immediate next task
 
-**No more EDA and no more score/value-template redesign.**
-
-The feature-level counterfactual + rescoring path now exists and passed a smoke check.
+**Do not do more Xente redesign.**
 
 Next technical task:
-> Run a small, structured sensitivity pack on the feature-level Xente closed loop (BLOCK calibration, alpha, epsilon, congestion triggers), verify the latest test suite, then freeze the Xente mechanism and execute the final 12 Xente configurations with enough seeds for convergence.
+
+> Convert the completed IEEE-CIS EDA/Data-to-ABM decisions into an executable chronological feature pipeline, freeze the persistent entity proxy, and train the first IEEE scenario-specific risk baseline that outputs validation/test risk probabilities for the shared policy engine.
