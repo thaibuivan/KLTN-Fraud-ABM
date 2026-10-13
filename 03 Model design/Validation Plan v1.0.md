@@ -1,12 +1,14 @@
-# Validation Plan v1.0 — Full Xente Adaptive Policy Model
+# Validation Plan v1.0 — Two-Scenario Adaptive Policy Model
 
 ## Model purpose
 
-Model dùng để **compare và stress-test policy dưới stated scenarios/assumptions**.
+Model dùng để **compare và stress-test policy dưới stated scenarios/assumptions** trên:
+- Xente;
+- IEEE-CIS.
 
 Không dùng để:
-- dự báo chính xác một ngân hàng cụ thể;
-- khuyến nghị production threshold;
+- tái tạo chính xác một ngân hàng;
+- khuyến nghị production threshold/staffing;
 - khẳng định fraudster cognition thật.
 
 ## 1. Conceptual validation
@@ -14,124 +16,171 @@ Không dùng để:
 Mỗi component phải có:
 - link tới RQ;
 - evidence type;
-- assumption boundary.
+- assumption boundary;
+- scenario-specific hay shared.
 
-Components:
-- customer state → Xente repeated history;
-- risk score → empirical model;
-- queue/capacity → literature + operational simulation;
-- fraudster adaptation → explicit behavioral mechanism + sensitivity;
-- policy rules → experimental treatments.
+Shared:
+- policy logic;
+- queue/analyst mechanism;
+- adaptive update rule;
+- outcome semantics.
 
-## 2. Input/empirical validation
+Scenario-specific:
+- entity/customer state;
+- empirical distributions;
+- feature engineering;
+- risk model;
+- strategy-to-feature mapping.
 
-Đã có trên Xente:
+## 2. Input / empirical validation
+
+### Xente
+Kiểm tra:
 - fraud prevalence;
-- Value/Amount distribution;
-- timestamp/ordering;
-- customer repetition;
+- Value/Amount;
+- real timestamp;
+- CustomerId repetition;
 - cold-start;
-- product/channel/provider distribution;
-- chronological risk-model evaluation.
+- product/channel/provider;
+- drift.
 
-Không coi adaptive parameters là empirical Xente parameters.
+### IEEE-CIS
+Kiểm tra:
+- fraud prevalence;
+- TransactionAmt/ProductCD;
+- card/device/identity coverage;
+- relative TransactionDT;
+- entity/proxy repetition;
+- missingness;
+- train-test drift;
+- masked-feature limitations.
+
+Không coi adaptive parameters là empirical parameters ở bất kỳ dataset nào.
 
 ## 3. Risk-model validation
 
-Giữ:
-- chronological split;
-- PR-AUC / ROC-AUC / Brier;
-- temporal expanding-window checks;
-- seen vs unseen customers;
-- weaker score-model specification.
+Cho từng scenario:
+- chronological split/validation;
+- PR-AUC;
+- ROC-AUC;
+- Brier/calibration;
+- temporal/drift checks;
+- stronger/degraded specification.
 
-Policy conclusions phải được kiểm tra dưới ít nhất một degraded score model.
+Policy conclusions phải được stress-test dưới ít nhất một degraded score specification.
 
 ## 4. Code verification
 
-Đã có queue tests:
+Đã/đang có:
 - no service before arrival;
-- equal capacity across queue disciplines;
-- no use of FraudResult for priority;
-- reproducible stochastic service;
-- fixed service rate across thresholds;
-- reproducible variable capacity.
+- equal capacity under same conditions;
+- priority không dùng fraud label;
+- reproducible stochastic service/capacity;
+- fixed service rate across threshold changes;
+- policy threshold boundary;
+- capacity-aware congestion response;
+- APPROVE/BLOCK không vào review queue;
+- REVIEW mới vào queue.
 
-Cần thêm:
-- policy threshold boundary tests;
-- capacity-aware threshold reacts monotonically to congestion;
-- queue state passed to policy uses only current/past state;
-- blocked transaction never enters review queue;
-- approved transaction never enters review queue;
-- fraudster reward/update uses realized system response;
-- identical seed reproduces adaptive path.
+Cần đảm bảo cho hai scenario:
+- adapter không đổi label/amount/time meaning;
+- IEEE relative time giữ đúng ordering;
+- Xente real time không bị reorder;
+- common engine cho cùng config semantics;
+- fraudster update dùng realized response;
+- same seed reproduces adaptive path.
 
 ## 5. Stochastic uncertainty
 
-Báo cáo:
+Final N seeds dựa trên convergence của:
+- successful fraud exposure;
+- fraud capture/intercept;
+- backlog;
+- P95 wait.
+
+Report:
 - mean;
 - standard deviation;
 - percentile interval hoặc CI phù hợp.
 
-Final N seeds dựa trên convergence của:
-- successful fraud value;
-- fraud capture;
-- backlog;
-- P95 waiting time.
-
 ## 6. Parameter sensitivity
 
-### Operational
-- low / medium / high capacity;
+Operational:
+- Low / Medium / High normalized capacity;
 - service-time CV;
 - team-capacity CV.
 
-### Fraudster behavior
-- learning rate alpha;
-- exploration epsilon;
-- optional dormancy assumptions.
+Behavioral:
+- alpha;
+- epsilon;
+- optional dormancy.
 
-### Policy
-- fixed review threshold;
-- block threshold;
-- congestion trigger / threshold increment.
+Policy:
+- review/block thresholds;
+- congestion trigger/increment.
+
+Scenario-specific:
+- fraud generator support/ranges;
+- entity-proxy definition cho IEEE;
+- customer/history initialization cho Xente.
 
 ## 7. Structural sensitivity
 
-Ít nhất:
 - FIFO vs risk-priority;
-- static vs adaptive;
-- full vs degraded risk score.
+- Static vs Adaptive;
+- full vs degraded score;
+- Xente vs IEEE-CIS.
 
 Optional:
-- alternate adaptation rule nếu thời gian cho phép.
+- alternate adaptation rule.
 
 ## 8. Pattern/output checks
 
-Model không cần match một ngân hàng thật.
+### Xente
+- legitimate replay preserves observed chronology/history;
+- generated fraud stays in declared empirical support/ranges.
 
-Nhưng phải kiểm tra:
-- legitimate replay preserves observed Xente chronology;
-- synthetic/counterfactual fraud amount/context nằm trong declared support/ranges;
-- fraud prevalence/exposure không tự drift ngoài scenario mà không được giải thích;
-- queue/backlog mechanics có expected limiting behavior.
+### IEEE-CIS
+- relative ordering preserved;
+- identity/device/card perturbations stay within declared support;
+- masked features không bị gán semantic giả.
+
+Cả hai:
+- queue limiting behavior hợp lý;
+- policy effect không do accidental capacity re-scaling;
+- fraud regime không drift ngoài scenario nếu không được thiết kế.
 
 ## 9. Extreme-condition tests
 
-Ví dụ:
-- infinite/high capacity → backlog gần 0;
-- zero/near-zero review capacity → queue tăng;
-- threshold cực strict → alert giảm;
-- threshold cực sensitive → alert tăng;
-- adaptive learning rate 0 → gần static-value-update behavior;
-- epsilon 0 → no exploration ngoài tie/initialization rule.
+- very high capacity → backlog gần 0;
+- near-zero capacity → queue tăng;
+- strict threshold → alerts giảm;
+- sensitive threshold → alerts tăng;
+- alpha = 0 → không có value learning;
+- epsilon = 0 → không exploration ngoài tie/init;
+- capacity-aware congestion tăng → review selectivity không giảm.
 
-## 10. Claim rule
+## 10. Cross-scenario validation
 
-Mỗi result phải được gắn nhãn:
+Không yêu cầu raw outcomes giống nhau.
+
+Kiểm tra:
+- direction của adaptation effect;
+- policy gain;
+- ranking;
+- interaction với capacity.
+
+Phân loại kết luận:
+- robust/consistent;
+- environment-dependent;
+- uncertain.
+
+## 11. Claim rule
+
+Mỗi result phải ghi rõ:
 - empirical observation;
 - simulation result;
 - sensitivity result;
 - assumption-dependent interpretation.
 
-Không biến một simulation finding thành real-bank claim.
+Không biến simulation finding thành real-bank claim.
