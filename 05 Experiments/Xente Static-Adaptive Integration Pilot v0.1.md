@@ -1,4 +1,4 @@
-# Xente Static–Adaptive Integration Pilot v0.1
+> **HISTORICAL INTEGRATION PILOT — superseded for the core model by the feature-level rescored Xente mechanism.**\n> Keep this file as evidence that the first closed-loop feedback architecture worked. Do not use its score-template / raw-threshold-increment settings as the final core specification.\n\n# Xente Static–Adaptive Integration Pilot v0.1
 
 ## Status
 
