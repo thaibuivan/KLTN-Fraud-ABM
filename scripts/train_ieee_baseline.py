@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import (
     average_precision_score,
     brier_score_loss,
@@ -169,11 +169,13 @@ def build_model(
         sparse_threshold=1.0,
     )
 
-    classifier = LogisticRegression(
-        max_iter=500,
-        C=0.5,
-        solver="saga",
+    classifier = SGDClassifier(
+        loss="log_loss",
+        penalty="l2",
+        alpha=1e-5,
+        max_iter=200,
         tol=1e-4,
+        average=True,
         random_state=0,
     )
 
