@@ -14,105 +14,92 @@ Xente + IEEE-CIS
 
 ## Completed
 
-### Data / EDA
-- [x] Xente raw data available
-- [x] Xente full EDA + Data → ABM
-- [x] IEEE-CIS raw data available
-- [x] IEEE-CIS full EDA + Data → ABM
-- [x] two-scenario complementarity frozen
+### Shared design
+- [x] Proposal → KLTN continuity
+- [x] two-scenario architecture
+- [x] Fixed / Capacity-aware policy interface
+- [x] persistent queue / analyst engine
+- [x] normalized capacity semantics
+- [x] normalized adaptive-reward semantics
+- [x] 24-config final experiment design
+- [x] validation framework
+- [x] GitHub CI
 
-### Xente empirical groundwork
-- [x] leakage-safe customer-history features
+### Xente data / empirical groundwork
+- [x] raw data available
+- [x] EDA + Data → ABM
+- [x] leakage-safe customer history
 - [x] chronological logistic baseline
-- [x] baseline reproduced from Library raw data
 - [x] temporal robustness
-- [x] degraded score models
-- [x] persistent queue
-- [x] FIFO vs risk-priority
-- [x] threshold/load sensitivity
-- [x] stochastic service
-- [x] variable team capacity
-- [x] starvation/tail waiting
+- [x] full / degraded / amount-only score checks
+- [x] queue / capacity / priority groundwork
 
-### Shared model / Xente integration
-- [x] Fixed policy code
-- [x] Capacity-aware policy code
-- [x] Cost-sensitive extension code
-- [x] integrated policy + queue engine
-- [x] empirical Fixed vs Capacity-aware Xente replay
-- [x] Low/Medium/High capacity normalized to validation workload
-- [x] adaptive fraudster prototype
+### Xente final closed loop
+- [x] feature-level fraud generator
+- [x] online past-only synthetic fraudster state
+- [x] generated-fraud risk rescoring
 - [x] StaticMixture comparator
-- [x] Xente validation-based fraud-template generator
-- [x] shared adaptive-policy simulation engine
-- [x] first 30-seed Static vs Adaptive Xente closed-loop pilot
+- [x] Adaptive epsilon-greedy mechanism
+- [x] normalized reward scale
+- [x] BLOCK / alpha / epsilon / congestion sensitivity
+- [x] frozen central Xente parameters
+- [x] 50-seed × 12-config main Xente core run
+- [x] convergence analysis
+- [x] degraded-score feature-level robustness
+- [x] current test suite passing
 
-## Still required
+## Current work — IEEE-CIS
 
-### Xente final mechanism
-- [x] feature-level counterfactual fraud generator from validation fraud regimes
-- [x] online past-only feature builder for generated fraud
-- [x] rescore generated fraud through saved Xente logistic model
-- [x] scenario-normalized fraudster reward scale added
-- [x] FIFO core / risk-priority robustness frozen
-- [x] tiered Capacity-aware policy semantics frozen
-- [x] unresolved-review exposure semantics defined
-- [x] 1-seed / 12-config feature-level smoke run completed
-- [ ] freeze BLOCK calibration after sensitivity
-- [ ] learning-rate sensitivity
-- [ ] epsilon sensitivity
-- [ ] capacity-aware congestion-trigger sensitivity
-- [ ] degraded-score sensitivity on the new closed loop
-- [ ] run latest full test suite
-- [ ] freeze final Xente mechanism
+### IEEE executable data/risk layer
+- [ ] materialize raw IEEE transaction/identity data from existing Library zip
+- [ ] implement chronological split
+- [ ] freeze entity proxy from prior EDA
+- [ ] build leakage-safe entity/history features
+- [ ] build missingness/context features
+- [ ] train interpretable baseline risk model
+- [ ] validate PR-AUC / ROC-AUC / calibration / temporal drift
+- [ ] save validation/test risk scores + model
+- [ ] canonical adapter verification
 
-### Xente final results
-- [ ] 12 core Xente configurations
-- [ ] convergence / Monte Carlo error
-- [ ] robustness pack on frozen model
-- [ ] final Xente tables/figures
+### IEEE policy / adaptive layer
+- [ ] Fixed vs Capacity-aware empirical replay
+- [ ] IEEE feature-level fraud strategy mapping
+- [ ] Static comparator
+- [ ] Adaptive closed loop
+- [ ] 12 IEEE core configs
+- [ ] convergence / sensitivity
+- [ ] final IEEE figures/tables
 
-### IEEE final
-- [ ] executable chronological feature pipeline
-- [ ] freeze entity proxy
-- [ ] scenario-specific risk model
-- [ ] empirical policy replay
-- [ ] IEEE-grounded fraud generator / strategy mapping
-- [ ] Static full loop
-- [ ] Adaptive full loop
-- [ ] 12 core configs
-- [ ] convergence/sensitivity
-- [ ] final IEEE tables/figures
+## Cross-scenario
+- [ ] adaptation penalty Xente vs IEEE
+- [ ] Capacity-aware gain Xente vs IEEE
+- [ ] policy ranking comparison
+- [ ] capacity interaction comparison
+- [ ] consistent / environment-dependent / uncertain classification
+- [ ] cross-scenario figures
 
-### Cross-scenario
-- [ ] adaptation penalty
-- [ ] capacity-aware gain
-- [ ] policy ranking
-- [ ] consistent vs environment-dependent conclusions
-- [ ] final cross-scenario figures
+## Final validation / documentation
+- [ ] final Parameter Registry snapshot
+- [ ] final cross-scenario validation summary
+- [ ] final experiment configuration appendix
+- [ ] final convergence appendix
 
-### Final validation
-- [ ] adaptive integration tests
-- [ ] extreme-condition tests
-- [ ] final parameter registry
-- [ ] seed convergence report
-- [ ] cross-scenario validation summary
-
-### Writing
+## Writing
 - [ ] Introduction
 - [ ] Literature Review
 - [ ] Data
-- [ ] full Methodology
-- [ ] Results
-- [ ] Discussion
+- [ ] Methodology
+- [ ] Xente Results
+- [ ] IEEE Results
+- [ ] Cross-scenario Discussion
 - [ ] Limitations
 - [ ] Conclusion
 - [ ] Appendices / References
 
 ## Immediate next task
 
-1. run a structured feature-level sensitivity pilot for BLOCK rate, alpha, epsilon and congestion triggers;
-2. run/verify the latest test suite and add missing adaptive integration tests;
-3. freeze the Xente closed-loop parameters;
-4. run the 12 final Xente configurations with convergence-based seeds;
-5. then move to the executable IEEE-CIS feature/risk pipeline.
+1. use the existing IEEE-CIS raw data already in Library;
+2. turn the completed IEEE EDA into an executable chronological feature/state builder;
+3. train the first IEEE risk baseline and output validation/test risk scores;
+4. feed those scores into the shared policy engine;
+5. then build the IEEE Static/Adaptive closed loop.
