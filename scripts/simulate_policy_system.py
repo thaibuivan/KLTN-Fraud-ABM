@@ -1,16 +1,13 @@
 """Integrated policy + persistent review-queue simulator.
 
-This module is the bridge between the existing Xente risk-score pipeline and the
-future static/adaptive fraudster integration. It currently replays scored
-transactions chronologically and lets a policy observe current queue state before
-choosing APPROVE, REVIEW or BLOCK.
+This module bridges scenario-specific risk scores with shared fraud-management
+policy, queue and analyst-capacity mechanics.
 
 It is a research simulator, not a production fraud-decision engine.
 """
 
 from __future__ import annotations
 
-from dataclasses import asdict
 from typing import Protocol
 
 import pandas as pd
@@ -76,20 +73,23 @@ def simulate_policy_system(
     transactions: pd.DataFrame,
     policy: Policy,
     pooled_service_rate_per_hour: float,
-    discipline: str = "risk_priority",
+    discipline: str = "fifo",
     horizon_end: pd.Timestamp | None = None,
 ) -> tuple[dict, pd.DataFrame, pd.DataFrame]:
     """Replay transactions through policy, queue and analyst service.
 
-    Baseline semantics:
-    - APPROVE fraud -> successful fraud exposure.
-    - BLOCK fraud -> prevented/intercepted exposure.
-    - REVIEW -> alert joins persistent queue.
-    - A fraud review counts as captured if service starts within the horizon.
+    Baseline outcome semantics:
+    - APPROVE fraud -> immediately exposed/successful fraud value.
+    - BLOCK fraud -> prevented/intercepted fraud value.
+    - REVIEW -> enters persistent queue.
+    - A REVIEWed fraud is counted as intercepted only if analyst service starts
+      within the observation horizon.
+    - A fraud still waiting in REVIEW at the horizon is unresolved exposure,
+      not yet counted as either prevented or successful.
     - Analyst review is perfect in this baseline; analyst error is a later
       sensitivity mechanism.
 
-    The policy sees only current/past system state at decision time.
+    The policy observes only current/past queue state at decision time.
     """
 
     if pooled_service_rate_per_hour < 0:
@@ -103,6 +103,8 @@ def simulate_policy_system(
             "alerts": 0,
             "backlog_end": 0,
             "successful_fraud_value": 0.0,
+            "unresolved_fraud_value": 0.0,
+            "fraud_exposure_at_horizon": 0.0,
             "prevented_fraud_value": 0.0,
             "fraud_intercepted_within_horizon": 0,
             "fraud_intercept_rate": None,
@@ -161,7 +163,6 @@ def simulate_policy_system(
     for row in df.itertuples(index=False):
         event_time = row.TransactionStartTime
 
-        # Complete/start all review work that can begin before this event.
         drain_until(event_time)
 
         context = PolicyContext(
@@ -198,12 +199,8 @@ def simulate_policy_system(
                 }
             )
             sequence += 1
-
-            # If the analyst is idle, the just-arrived alert can start now.
             drain_until(event_time)
 
-    # After the last transaction, allow service starts only until the
-    # declared observation horizon.
     drain_until(horizon_end)
 
     decisions_df = pd.DataFrame(decisions)
@@ -229,6 +226,9 @@ def simulate_policy_system(
     fraud_intercepted = int(
         (fraud_mask & (blocked | (review_action & reviewed_within))).sum()
     )
+    unresolved_fraud_count = int(
+        (fraud_mask & review_action & ~reviewed_within).sum()
+    )
 
     successful_fraud_value = float(
         decisions_df.loc[fraud_mask & approved, "Value"].sum()
@@ -244,6 +244,9 @@ def simulate_policy_system(
             fraud_mask & review_action & ~reviewed_within,
             "Value",
         ].sum()
+    )
+    fraud_exposure_at_horizon = (
+        successful_fraud_value + unresolved_fraud_value
     )
 
     waiting = (
@@ -268,15 +271,20 @@ def simulate_policy_system(
         "fraud_intercept_rate": (
             fraud_intercepted / fraud_total if fraud_total else None
         ),
+        "unresolved_fraud_count": unresolved_fraud_count,
         "successful_fraud_value": successful_fraud_value,
-        "prevented_fraud_value": prevented_fraud_value,
         "unresolved_fraud_value": unresolved_fraud_value,
+        "fraud_exposure_at_horizon": fraud_exposure_at_horizon,
+        "prevented_fraud_value": prevented_fraud_value,
         "legitimate_review_count": int(
             (legit_mask & review_action).sum()
         ),
         "legitimate_block_count": int((legit_mask & blocked).sum()),
         "legitimate_intervention_rate": (
-            float((legit_mask & (review_action | blocked)).sum() / legit_mask.sum())
+            float(
+                (legit_mask & (review_action | blocked)).sum()
+                / legit_mask.sum()
+            )
             if legit_mask.sum()
             else None
         ),
