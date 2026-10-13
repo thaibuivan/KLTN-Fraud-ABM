@@ -17,6 +17,8 @@ import argparse
 import json
 from pathlib import Path
 
+import joblib
+
 import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
@@ -220,6 +222,10 @@ def main() -> None:
         features = numeric_features + categorical_features
         model = build_model(numeric_features, categorical_features)
         model.fit(train[features], train["FraudResult"])
+        joblib.dump(
+            model,
+            output_dir / f"{model_name}_model.joblib",
+        )
 
         for split_name, frame in [
             ("validation", validation),
