@@ -11,6 +11,7 @@ Outputs are local/gitignored and include:
 - metrics.json
 - validation_scores.csv
 - test_scores.csv
+- model.joblib
 """
 
 from __future__ import annotations
@@ -18,6 +19,8 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+
+import joblib
 
 import numpy as np
 import pandas as pd
@@ -87,6 +90,8 @@ def score_frame(
     x = frame[NUMERIC_FEATURES + CATEGORICAL_FEATURES]
     y = frame["FraudResult"].to_numpy(dtype=int)
     p = model.predict_proba(x)[:, 1]
+
+    joblib.dump(model, output_dir / "model.joblib")
 
     metrics = {
         "split": name,
