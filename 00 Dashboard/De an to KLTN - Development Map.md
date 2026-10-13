@@ -2,15 +2,11 @@
 
 ## Một câu để hiểu mối quan hệ
 
-Khóa luận **không đổi sang một đề tài khác**. Nó phát triển trực tiếp từ đề án:
+Khóa luận **không đổi đề tài**. Nó phát triển trực tiếp từ đề án:
 
-> từ một framework mô phỏng policy dựa nhiều vào synthetic assumptions sang một dynamic policy-simulation / ABM có empirical grounding tốt hơn, persistent operational state và adaptive fraudster.
+> từ một framework policy simulation dựa nhiều vào synthetic assumptions sang một closed-loop dynamic/agent-based simulation có empirical grounding trên **hai transaction environments bổ sung cho nhau: Xente và IEEE-CIS**.
 
-## Những gì đề án đã có
-
-Đề án đã đặt bài toán ở cấp **transaction-risk decisioning**, không chỉ fraud classification.
-
-Luồng cũ:
+## Đề án đã có
 
 ```text
 Synthetic customer / transaction
@@ -26,140 +22,109 @@ Daily analyst capacity
 Precision / Recall / Overflow / Net benefit
 ```
 
-Các policy đã xuất hiện:
-- balanced threshold;
-- sensitive threshold;
-- strict threshold;
-- capacity-aware;
-- cost-sensitive.
+Đề án đã có:
+- risky actor;
+- threshold policies;
+- capacity-aware idea;
+- cost-sensitive idea;
+- analyst capacity;
+- operational metrics.
 
-Risky actor cũng đã tồn tại ở mức conceptual với các strategy như high-amount, burst/velocity và normal-like behavior.
+## KLTN nâng cấp gì?
 
-## Những hạn chế của đề án mà KLTN sẽ phát triển
-
-### 1. Dữ liệu
+### 1. Empirical grounding
 Đề án:
-- tự sinh transaction stream synthetic;
-- public datasets chủ yếu dùng làm tham chiếu phân phối.
+- synthetic stream;
+- public data chủ yếu tham khảo phân phối.
 
 KLTN:
-- Xente là empirical development environment chính;
-- observed transaction stream được replay theo thời gian;
-- customer state và risk score được xây từ public transaction data;
-- chỉ mô phỏng/counterfactual những thành phần lịch sử không thể trực tiếp cung cấp.
+- Xente và IEEE-CIS là hai empirical scenarios core;
+- observed data dùng cho state, chronology/context, risk model và generator support;
+- counterfactual components được tách rõ khỏi observed components.
 
-### 2. Risk score
+### 2. Risk scoring
 Đề án:
 - proxy/rule-based score.
 
 KLTN:
-- leakage-safe features;
-- chronological train/validation/test;
-- trained risk model;
-- temporal and structural robustness.
+- train/validate riêng risk model theo từng scenario.
 
-### 3. Analyst capacity
+### 3. Analyst dynamics
 Đề án:
-- capacity theo ngày;
-- vượt capacity tạo overflow.
+- daily capacity/overflow.
 
 KLTN:
 - persistent queue;
-- backlog tồn tại qua thời gian;
+- backlog;
 - waiting time;
-- starvation/tail delay;
-- variable service/capacity stress.
+- tail delay;
+- variable capacity.
 
 ### 4. Risky actor
 Đề án:
-- strategy chủ yếu được chỉ định trước;
-- strategic reaction mới ở mức minh họa.
+- fixed/predefined strategy chủ yếu ở mức minh họa.
 
 KLTN:
 - static comparator;
-- adaptive fraudster có state;
-- quan sát APPROVE/REVIEW/BLOCK;
-- cập nhật strategy value;
-- feedback qua nhiều vòng.
+- adaptive fraudster;
+- response → reward → strategy update qua nhiều vòng.
 
 ### 5. Policy experiment
 Đề án:
-- nhiều policy nhưng định nghĩa còn lẫn giữa threshold level và policy family.
+- nhiều threshold labels + capacity-aware/cost-sensitive.
 
 KLTN:
-- gom balanced/sensitive/strict thành **Fixed-threshold policy** với threshold là policy parameter;
-- **Capacity-aware policy** là core alternative;
-- **Cost-sensitive policy** là extension/core tùy khả năng ground cost assumptions.
+- balanced/sensitive/strict được gom thành Fixed-threshold family;
+- Capacity-aware là core alternative;
+- Cost-sensitive là extension nếu cost grounding đủ tốt.
 
-## Scope core hiện tại
+## Vì sao hai dataset?
 
-### Empirical environment
-**Xente là development environment chính.**
+### Xente
+Cho customer/history state rõ.
 
-IEEE-CIS:
-- không bỏ;
-- để làm external/cross-scenario robustness nếu thời gian và scope cho phép;
-- không phải dependency để hoàn thành core KLTN.
+### IEEE-CIS
+Cho card/device/identity-rich risk environment.
 
-### Core experiment tối giản
+Hai bộ giải quyết hai mặt khác nhau của cùng framework và giúp kiểm tra xem kết luận có phụ thuộc một dataset cụ thể hay không.
+
+## Core experiment toàn thesis
 
 ```text
+2 datasets
+×
 2 fraudster modes
 ×
-2 core policies
+2 policies
 ×
-3 analyst-capacity levels
+3 capacities
 =
-12 configurations
+24 configurations
 ```
 
-Fraudster:
-- Static
-- Adaptive
-
-Policy:
-- Fixed threshold
-- Capacity-aware
-
-Capacity:
-- Low
-- Medium
-- High
-
-Cost-sensitive:
-- chạy như extension nếu cost parameters đủ defensible.
-
-Queue discipline:
-- giữ một discipline làm baseline;
-- FIFO vs risk-priority dùng structural robustness, không nhân vào toàn bộ factorial grid.
-
-## Chuỗi phát triển từ giờ
+## Chuỗi phát triển
 
 ```text
-Freeze research design
+Freeze shared design
         ↓
-Freeze policy interface
+Implement full Xente scenario
         ↓
-Integrated Xente policy engine
+Freeze common interfaces
         ↓
-Static fraudster empirical generator
+Implement IEEE-CIS adapter/risk/state
         ↓
-Adaptive fraudster feedback
+Run 12 Xente + 12 IEEE
         ↓
-12 core configurations
+Cross-scenario comparison
         ↓
 Sensitivity / robustness
-        ↓
-Optional IEEE-CIS replication
         ↓
 Methods + Results + Discussion
 ```
 
-## Nguyên tắc chống mở rộng scope
+## Nguyên tắc chống scope explosion
 
-Mỗi cơ chế mới phải trả lời được:
-1. nó phục vụ RQ nào?
-2. data/literature/assumption nào support nó?
-3. nếu bỏ nó, kết luận chính có thay đổi không?
-
-Nếu không trả lời được, chưa thêm vào core model.
+- Không merge datasets.
+- Không bắt hai scenario có cùng state variables.
+- Chỉ giữ cùng policy/queue/adaptation protocol.
+- Robustness factors khác chạy riêng, không nhân hết vào core grid.
