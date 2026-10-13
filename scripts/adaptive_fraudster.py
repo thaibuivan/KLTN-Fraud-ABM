@@ -37,6 +37,7 @@ class AdaptiveFraudster:
     block_penalty: float = 1.0
     consecutive_block_limit: int = 3
     dormancy_steps: int = 2
+    reward_scale: float = 1.0
     seed: Optional[int] = None
 
     states: Dict[str, StrategyState] = field(init=False)
@@ -52,6 +53,8 @@ class AdaptiveFraudster:
             raise ValueError("learning_rate must be in (0, 1].")
         if not 0 <= self.epsilon <= 1:
             raise ValueError("epsilon must be in [0, 1].")
+        if self.reward_scale <= 0:
+            raise ValueError("reward_scale must be positive.")
 
         self._rng = random.Random(self.seed)
         self.states = {name: StrategyState() for name in strategies}
@@ -85,21 +88,22 @@ class AdaptiveFraudster:
         if amount < 0:
             raise ValueError("amount must be non-negative")
 
+        reward_amount = float(amount) / self.reward_scale
         state = self.states[self.current_strategy]
         state.attempts += 1
 
         if response == "APPROVE":
-            reward = float(amount)
+            reward = reward_amount
             state.successes += 1
             self.consecutive_blocks = 0
         elif response == "CHALLENGE":
-            reward = -self.challenge_penalty * float(amount)
+            reward = -self.challenge_penalty * reward_amount
             self.consecutive_blocks = 0
         elif response == "REVIEW":
-            reward = -self.review_penalty * float(amount)
+            reward = -self.review_penalty * reward_amount
             self.consecutive_blocks = 0
         else:
-            reward = -self.block_penalty * float(amount)
+            reward = -self.block_penalty * reward_amount
             self.consecutive_blocks += 1
             if self.consecutive_blocks >= self.consecutive_block_limit:
                 self.dormant_until = step + 1 + self.dormancy_steps
@@ -139,6 +143,7 @@ class StaticMixtureFraudster:
     """
 
     strategy_weights: Dict[str, float]
+    reward_scale: float = 1.0
     seed: Optional[int] = None
 
     states: Dict[str, StrategyState] = field(init=False)
@@ -152,6 +157,8 @@ class StaticMixtureFraudster:
         total = sum(self.strategy_weights.values())
         if total <= 0:
             raise ValueError("strategy weights must sum to a positive value")
+        if self.reward_scale <= 0:
+            raise ValueError("reward_scale must be positive")
 
         self._rng = random.Random(self.seed)
         self._strategies = list(self.strategy_weights)
@@ -180,13 +187,14 @@ class StaticMixtureFraudster:
         if amount < 0:
             raise ValueError("amount must be non-negative")
 
+        reward_amount = float(amount) / self.reward_scale
         state = self.states[self.current_strategy]
         state.attempts += 1
         if response == "APPROVE":
             state.successes += 1
-            return float(amount)
+            return reward_amount
         if response == "CHALLENGE":
-            return -0.30 * float(amount)
+            return -0.30 * reward_amount
         if response == "REVIEW":
-            return -0.15 * float(amount)
-        return -1.0 * float(amount)
+            return -0.15 * reward_amount
+        return -1.0 * reward_amount
