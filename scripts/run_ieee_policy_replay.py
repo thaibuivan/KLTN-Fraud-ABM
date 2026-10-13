@@ -1,17 +1,14 @@
-"""Run the first integrated IEEE-CIS policy-replay experiment.
+"""Run the integrated pre-adaptation IEEE-CIS policy replay.
 
-Expected inputs are scored validation/test CSV files containing:
+Expected scored validation/test CSVs contain:
 - TransactionID
 - TransactionDT
 - TransactionAmt
 - isFraud
 - risk_probability
 
-The runner converts IEEE's relative TransactionDT to an arbitrary timestamp
-origin only to preserve event ordering and inter-arrival intervals. The derived
-timestamps have no calendar interpretation.
-
-This is a pre-adaptation pilot, parallel to run_xente_policy_replay.py.
+TransactionDT remains relative time. The adapter creates an arbitrary timestamp
+origin only to preserve event order and inter-arrival intervals.
 """
 
 from __future__ import annotations
@@ -22,8 +19,8 @@ from pathlib import Path
 import pandas as pd
 
 from scripts.fraud_policies import (
-    CapacityAwarePolicy,
     FixedThresholdPolicy,
+    TieredCapacityAwarePolicy,
 )
 from scripts.scenario_adapters import normalize_ieee_scores
 from scripts.simulate_alert_queue import threshold_for_target_rate
@@ -33,13 +30,9 @@ from scripts.simulate_policy_system import simulate_policy_system
 def mean_arrival_rate_per_hour(alerts: pd.DataFrame) -> float:
     if len(alerts) <= 1:
         return 0.0
-
     start = alerts["TransactionStartTime"].min()
     end = alerts["TransactionStartTime"].max()
-    hours = max(
-        (end - start).total_seconds() / 3600.0,
-        1e-9,
-    )
+    hours = max((end - start).total_seconds() / 3600.0, 1e-9)
     return len(alerts) / hours
 
 
@@ -47,19 +40,15 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--validation-scores", required=True)
     parser.add_argument("--test-scores", required=True)
-    parser.add_argument(
-        "--target-review-rate",
-        type=float,
-        default=0.01,
-    )
+
+    parser.add_argument("--base-review-rate", type=float, default=0.01)
+    parser.add_argument("--soft-review-rate", type=float, default=0.0075)
+    parser.add_argument("--hard-review-rate", type=float, default=0.005)
+
     parser.add_argument(
         "--block-threshold",
         type=float,
         default=1.0,
-        help=(
-            "Default 1.0 keeps BLOCK effectively off in the first "
-            "policy-replay pilot."
-        ),
     )
     parser.add_argument(
         "--capacity-ratios",
@@ -67,7 +56,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--discipline",
-        default="risk_priority",
+        default="fifo",
     )
     parser.add_argument(
         "--soft-backlog-hours",
@@ -80,16 +69,6 @@ def parse_args() -> argparse.Namespace:
         default=72.0,
     )
     parser.add_argument(
-        "--soft-increment",
-        type=float,
-        default=0.05,
-    )
-    parser.add_argument(
-        "--hard-increment",
-        type=float,
-        default=0.10,
-    )
-    parser.add_argument(
         "--output",
         default="outputs/local/ieee_policy_replay/summary.csv",
     )
@@ -99,23 +78,41 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    validation_raw = pd.read_csv(args.validation_scores)
-    test_raw = pd.read_csv(args.test_scores)
+    if not (
+        0 < args.hard_review_rate
+        <= args.soft_review_rate
+        <= args.base_review_rate
+        < 1
+    ):
+        raise ValueError(
+            "Review rates must satisfy "
+            "0 < hard <= soft <= base < 1"
+        )
 
-    validation = normalize_ieee_scores(validation_raw)
-    test = normalize_ieee_scores(test_raw)
+    validation = normalize_ieee_scores(
+        pd.read_csv(args.validation_scores)
+    )
+    test = normalize_ieee_scores(
+        pd.read_csv(args.test_scores)
+    )
 
-    review_threshold = threshold_for_target_rate(
+    base_threshold = threshold_for_target_rate(
         validation,
-        args.target_review_rate,
+        args.base_review_rate,
+    )
+    soft_threshold = threshold_for_target_rate(
+        validation,
+        args.soft_review_rate,
+    )
+    hard_threshold = threshold_for_target_rate(
+        validation,
+        args.hard_review_rate,
     )
 
     reference_alerts = validation.loc[
-        validation["risk_probability"] >= review_threshold
+        validation["risk_probability"] >= base_threshold
     ]
-    reference_rate = mean_arrival_rate_per_hour(
-        reference_alerts
-    )
+    reference_rate = mean_arrival_rate_per_hour(reference_alerts)
     if reference_rate <= 0:
         raise ValueError(
             "Reference validation alert-arrival rate must be positive"
@@ -129,16 +126,16 @@ def main() -> None:
 
         policies = {
             "fixed": FixedThresholdPolicy(
-                review_threshold=review_threshold,
+                review_threshold=base_threshold,
                 block_threshold=args.block_threshold,
             ),
-            "capacity_aware": CapacityAwarePolicy(
-                base_review_threshold=review_threshold,
+            "capacity_aware": TieredCapacityAwarePolicy(
+                base_review_threshold=base_threshold,
+                soft_review_threshold=soft_threshold,
+                hard_review_threshold=hard_threshold,
                 block_threshold=args.block_threshold,
                 soft_backlog_hours=args.soft_backlog_hours,
                 hard_backlog_hours=args.hard_backlog_hours,
-                soft_increment=args.soft_increment,
-                hard_increment=args.hard_increment,
             ),
         }
 
@@ -153,28 +150,24 @@ def main() -> None:
                 {
                     "dataset": "IEEE-CIS",
                     "policy": name,
-                    "capacity_ratio_to_validation_reference": (
-                        capacity_ratio
-                    ),
-                    "validation_reference_review_rate": (
-                        args.target_review_rate
-                    ),
-                    "review_threshold": review_threshold,
+                    "capacity_ratio_to_validation_reference": capacity_ratio,
+                    "base_review_rate": args.base_review_rate,
+                    "soft_review_rate": args.soft_review_rate,
+                    "hard_review_rate": args.hard_review_rate,
+                    "base_review_threshold": base_threshold,
+                    "soft_review_threshold": soft_threshold,
+                    "hard_review_threshold": hard_threshold,
                     "block_threshold": args.block_threshold,
+                    "soft_backlog_hours": args.soft_backlog_hours,
+                    "hard_backlog_hours": args.hard_backlog_hours,
                 }
             )
             rows.append(summary)
 
     out = pd.DataFrame(rows)
     output = Path(args.output)
-    output.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-    out.to_csv(
-        output,
-        index=False,
-    )
+    output.parent.mkdir(parents=True, exist_ok=True)
+    out.to_csv(output, index=False)
     print(out.to_string(index=False))
 
 
