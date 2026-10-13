@@ -4,84 +4,118 @@ Kho này phát triển trực tiếp từ đề án **FinRisk Decision Simulatio
 
 ## Một câu để nhớ
 
-> Phát triển framework transaction-risk decisioning của đề án thành một dynamic policy-simulation / ABM có empirical grounding tốt hơn, persistent analyst queue và adaptive fraudster.
+> Phát triển framework transaction-risk decisioning của đề án thành một dynamic policy-simulation / ABM có empirical grounding tốt hơn, persistent analyst queue và adaptive fraudster, được kiểm tra trên **hai empirical scenarios bổ sung cho nhau: Xente và IEEE-CIS**.
 
-## Hướng nghiên cứu hiện tại
+## Hai scenario core
+
+### Scenario A — Xente
+Mạnh ở:
+- CustomerId rõ;
+- repeated customer history;
+- timestamp thực;
+- product/provider/channel dễ diễn giải;
+- phù hợp xây persistent customer state.
+
+### Scenario B — IEEE-CIS
+Mạnh ở:
+- dữ liệu transaction lớn và giàu detection context;
+- card/device/identity context;
+- entity/proxy heterogeneity;
+- distribution shift rõ;
+- phù hợp stress-test framework trong môi trường online/card/e-commerce khác Xente.
+
+**Không merge hai dataset.** Dùng cùng system architecture nhưng parameterize riêng.
+
+## Vai trò từng phần
 
 - **Mục tiêu:** thử nghiệm / stress-test fraud-management policy.
 - **ABM / dynamic simulation:** công cụ nghiên cứu.
 - **Adaptive fraudster:** phát triển risky actor của đề án thành cơ chế feedback qua nhiều vòng.
 - **Persistent queue + analyst capacity:** phát triển daily overflow thành operational dynamics.
-- **Risk model:** thành phần tạo risk score, không phải contribution chính.
-- **Xente:** empirical development environment chính.
-- **IEEE-CIS:** optional external robustness nếu core Xente hoàn thành.
+- **Risk model:** scenario-specific component tạo risk score.
+- **Xente + IEEE-CIS:** hai empirical environments bổ sung cho nhau.
 
 ## Bắt đầu đọc từ đâu?
 
 1. `00 Dashboard/READING ORDER.md`
 2. `00 Dashboard/De an to KLTN - Development Map.md`
-3. `00 Dashboard/Current Direction - 2026-10-11.md`
-4. `03 Model design/Research Design v1.1 - Develop from FinRisk Proposal.md`
+3. `03 Model design/Research Design v1.1 - Develop from FinRisk Proposal.md`
+4. `03 Model design/Shared Two-Scenario Architecture v1.0.md`
 5. `03 Model design/Xente Full Model Specification v1.0.md`
-6. `05 Experiments/Final Core Experiment Grid v1.0.md`
+6. `03 Model design/IEEE-CIS Full Implementation Plan v1.0.md`
+7. `05 Experiments/Final Core Experiment Grid v1.0.md`
+8. `05 Experiments/Cross-Scenario Comparison Plan v1.0.md`
 
-## Core experiment
+## Core experiment toàn thesis
 
 ```text
-Static / Adaptive fraudster
+2 datasets
 ×
-Fixed / Capacity-aware policy
+2 fraudster modes
 ×
-Low / Medium / High analyst capacity
+2 policies
+×
+3 analyst-capacity levels
 =
-12 configurations
+24 configurations
 ```
 
-Cost-sensitive policy là extension nếu cost assumptions đủ defensible.
+Datasets:
+- Xente
+- IEEE-CIS
 
-FIFO vs risk-priority là structural robustness, không nhân vào toàn bộ core grid.
+Fraudster:
+- Static
+- Adaptive
 
-## Những gì đã làm được
+Policies:
+- Fixed-threshold
+- Capacity-aware
+
+Capacity:
+- Low
+- Medium
+- High
+
+Cost-sensitive là extension nếu cost assumptions đủ defensible.
+
+## Thứ tự implementation
+
+Không build hai simulator riêng song song.
+
+```text
+Shared architecture
+      ↓
+Xente full implementation
+      ↓
+tách/freeze common interfaces
+      ↓
+IEEE-CIS adapter + parameterization
+      ↓
+24 core configurations
+      ↓
+cross-scenario robustness
+```
+
+## Những gì đã có
 
 Xente:
-- data audit/profile;
+- audit/profile;
 - leakage-safe customer-history features;
-- chronological logistic risk baseline;
-- temporal / score-model robustness;
-- persistent alert queue;
-- FIFO vs risk-priority;
-- fixed-capacity threshold sensitivity;
-- stochastic service;
-- variable team capacity;
-- starvation/tail waiting diagnostics.
+- chronological risk baseline;
+- persistent queue;
+- threshold/capacity/priority robustness.
 
-Adaptive fraudster:
-- conceptual specification;
-- heuristic/bandit-style prototype;
-- unit tests;
-- synthetic smoke runner.
+IEEE-CIS:
+- EDA/data-to-ABM analysis;
+- scenario role đã được xác định;
+- cần chuyển từ EDA sang executable feature/risk/adapter pipeline.
 
-Policy layer:
-- shared policy interface;
-- fixed-threshold policy;
-- capacity-aware policy;
-- cost-sensitive extension;
-- policy unit tests đã được thêm vào repo.
-
-## Phần còn thiếu để hoàn thành core KLTN
-
-1. tích hợp policy interface vào event-driven Xente simulator;
-2. tích hợp static fraudster với empirical fraud generator;
-3. nối adaptive feedback vào Xente environment;
-4. chạy 12 core configurations;
-5. behavioral sensitivity + convergence;
-6. final tables/figures;
-7. Methods / Results / Discussion.
-
-## Git
-
-- `main`: stable.
-- `chatgpt-draft`: active research branch.
+Shared:
+- fraud-policy interface;
+- integrated policy/queue engine;
+- adaptive fraudster prototype;
+- tests cho queue/policy/adaptation mechanics.
 
 ## Claim boundary
 
