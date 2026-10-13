@@ -71,10 +71,12 @@ class FixedThresholdPolicy:
 
 @dataclass(frozen=True)
 class CapacityAwarePolicy:
-    """Raise the review threshold when the review queue is congested.
+    """Legacy absolute-score capacity-aware mechanism.
 
-    Congestion is measured using backlog-hours = queue_size / service_rate_per_hour.
-    This is an experimental policy mechanism, not a claimed bank rule.
+    Kept for backward compatibility / structural sensitivity.
+    The final cross-scenario core experiment should prefer
+    TieredCapacityAwarePolicy, because absolute score increments are not
+    comparable across independently trained Xente and IEEE-CIS risk models.
     """
 
     base_review_threshold: float
@@ -107,6 +109,67 @@ class CapacityAwarePolicy:
             threshold += self.soft_increment
 
         return min(threshold, self.block_threshold)
+
+    def decide(self, context: PolicyContext) -> Action:
+        p = context.risk_probability
+        if p >= self.block_threshold:
+            return Action.BLOCK
+        if p >= self.effective_review_threshold(context):
+            return Action.REVIEW
+        return Action.APPROVE
+
+
+@dataclass(frozen=True)
+class TieredCapacityAwarePolicy:
+    """Scenario-normalized capacity-aware routing policy.
+
+    The three score thresholds are calibrated externally on the scenario's
+    validation score distribution. This allows the same policy semantics to be
+    used with independently trained risk models whose raw probability scales
+    differ.
+
+    Example:
+    - base threshold = validation threshold for top 1.0% review rate;
+    - soft threshold = validation threshold for top 0.75%;
+    - hard threshold = validation threshold for top 0.50%.
+
+    Congestion is measured in backlog-hours = queue_size / service_rate.
+    """
+
+    base_review_threshold: float
+    soft_review_threshold: float
+    hard_review_threshold: float
+    block_threshold: float
+    soft_backlog_hours: float
+    hard_backlog_hours: float
+
+    def __post_init__(self) -> None:
+        _validate_thresholds(self.base_review_threshold, self.block_threshold)
+        _validate_thresholds(self.soft_review_threshold, self.block_threshold)
+        _validate_thresholds(self.hard_review_threshold, self.block_threshold)
+
+        if not (
+            self.base_review_threshold
+            <= self.soft_review_threshold
+            <= self.hard_review_threshold
+        ):
+            raise ValueError(
+                "review thresholds must be non-decreasing with congestion"
+            )
+        if self.soft_backlog_hours < 0:
+            raise ValueError("soft_backlog_hours must be non-negative")
+        if self.hard_backlog_hours < self.soft_backlog_hours:
+            raise ValueError(
+                "hard_backlog_hours must be >= soft_backlog_hours"
+            )
+
+    def effective_review_threshold(self, context: PolicyContext) -> float:
+        backlog = context.backlog_hours
+        if backlog >= self.hard_backlog_hours:
+            return self.hard_review_threshold
+        if backlog >= self.soft_backlog_hours:
+            return self.soft_review_threshold
+        return self.base_review_threshold
 
     def decide(self, context: PolicyContext) -> Action:
         p = context.risk_probability
@@ -160,6 +223,5 @@ class CostSensitivePolicy:
 
     def decide(self, context: PolicyContext) -> Action:
         costs = self.expected_costs(context)
-        # Stable tie-break: APPROVE -> REVIEW -> BLOCK.
         order = [Action.APPROVE, Action.REVIEW, Action.BLOCK]
         return min(order, key=lambda action: costs[action])
