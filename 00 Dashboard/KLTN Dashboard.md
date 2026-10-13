@@ -2,103 +2,96 @@
 
 ## Hướng hiện tại
 
-> **KLTN phát triển trực tiếp từ đề án FinRisk: giữ bài toán transaction-risk decisioning nhưng nâng synthetic framework thành Xente-grounded dynamic policy simulation có persistent queue và adaptive fraudster.**
+> **KLTN phát triển trực tiếp từ đề án FinRisk và kiểm tra cùng một policy-testing framework trên hai empirical environments bổ sung cho nhau: Xente và IEEE-CIS.**
 
 ## Câu hỏi nghiên cứu chính
 
-> Các chính sách quản lý gian lận giao dịch hoạt động như thế nào khi fraudster thích nghi với phản hồi của hệ thống và analyst capacity bị giới hạn?
+> Các chính sách quản lý gian lận giao dịch hoạt động như thế nào khi fraudster thích nghi với phản hồi của hệ thống và analyst capacity bị giới hạn, và các kết luận này có robust giữa hai transaction environments khác nhau hay không?
 
-## Hãy nhớ chuỗi này
+## Bản đồ nghiên cứu
 
 ```text
 Đề án FinRisk
       ↓
-Xente empirical grounding
+Shared ABM / policy framework
       ↓
-Risk + Policy + Persistent Queue + Analyst
-      ↓
-Static / Adaptive Fraudster
-      ↓
-Core policy experiments
-      ↓
-Sensitivity / robustness
-      ↓
-KLTN Results
+ ┌───────────────┬────────────────┐
+ ↓               ↓
+Xente          IEEE-CIS
+Customer-      Card/device/
+history rich   identity-context rich
+ ↓               ↓
+scenario-specific risk/state
+ └───────┬───────┘
+         ↓
+Static / Adaptive
+× Fixed / Capacity-aware
+× Low / Medium / High capacity
+         ↓
+Cross-scenario comparison
 ```
 
-## Source of truth hiện tại
+## Source of truth
 
 - [[De an to KLTN - Development Map]]
-- [[Current Direction - 2026-10-11]]
 - [[Research Design v1.1 - Develop from FinRisk Proposal]]
+- [[Shared Two-Scenario Architecture v1.0]]
 - [[Xente Full Model Specification v1.0]]
+- [[Xente Full Implementation Plan v1.0]]
+- [[IEEE-CIS Full Implementation Plan v1.0]]
 - [[Parameter Registry v0.2]]
 - [[Adaptive Fraudster Design v0.1]]
 - [[Validation Plan v1.0]]
 - [[Final Core Experiment Grid v1.0]]
+- [[Cross-Scenario Comparison Plan v1.0]]
 
-## Những gì đã làm thật
+## Trạng thái
 
-### Xente empirical layer
-- 95,662 labelled transactions;
-- 193 fraud;
-- 3,742 CustomerIds;
-- chronological state/features;
-- logistic risk baseline;
-- temporal / structural score checks.
+### Xente
+Đã làm sâu:
+- empirical profile;
+- customer-history features;
+- risk baseline;
+- queue/capacity experiments;
+- robustness.
 
-### Operational layer
-- persistent alert queue;
-- FIFO / risk-priority;
-- fixed/relative pooled capacity;
-- threshold overload;
-- service-time stochasticity;
-- variable team capacity;
-- starvation/tail waiting.
+### IEEE-CIS
+Đã có:
+- EDA;
+- data-to-ABM mapping;
+- role definition: identity/device-rich scenario.
 
-### Adaptive layer
-- fraudster state/update prototype;
-- static comparator;
-- dormancy mechanism;
-- synthetic smoke experiment.
+Còn thiếu:
+- executable chronological feature pipeline;
+- scenario-specific risk pipeline;
+- common-schema adapter;
+- full policy/adaptation runs.
 
-### Policy layer
-Đã thêm interface chung:
-- Fixed-threshold;
-- Capacity-aware;
-- Cost-sensitive extension.
+### Shared engine
+Đã có:
+- fixed/capacity-aware policy code;
+- integrated policy + persistent queue simulator;
+- adaptive fraudster prototype;
+- verification tests.
 
-## Scope core
-
-### Data
-- **Xente: core**
-- IEEE-CIS: optional external robustness.
-
-### Policy
-- Fixed-threshold: core.
-- Capacity-aware: core.
-- Cost-sensitive: extension nếu cost grounding đủ tốt.
-
-### Core experiment
+## Core experiment
 
 ```text
-2 Fraudster modes
-×
-2 Policies
-×
-3 Capacity levels
-=
-12 configurations
+2 Dataset
+× 2 Fraudster mode
+× 2 Policy
+× 3 Capacity
+= 24 configurations
 ```
 
 ## Việc tiếp theo
 
-1. tích hợp policy layer vào Xente event-driven simulator;
-2. freeze baseline queue discipline;
-3. xây empirical fraud transaction generator;
-4. nối Static Fraudster;
-5. nối Adaptive Fraudster;
-6. chạy end-to-end pilot;
-7. chạy 12 core configurations;
-8. sensitivity / convergence;
+1. hoàn thiện Xente integrated policy replay;
+2. freeze shared interfaces;
+3. nối Static rồi Adaptive fraudster trên Xente;
+4. build IEEE-CIS feature/risk/adapter pipeline;
+5. nối cùng Static/Adaptive mechanism vào IEEE;
+6. chạy 12 Xente + 12 IEEE;
+7. cross-scenario comparison;
+8. sensitivity/convergence;
 9. final writing.
