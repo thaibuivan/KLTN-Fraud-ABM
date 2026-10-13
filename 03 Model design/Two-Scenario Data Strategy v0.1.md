@@ -1,63 +1,88 @@
-# Two-Scenario Data Strategy v0.1 — trạng thái sau khi thu gọn scope
+# Two-Scenario Data Strategy v0.1
 
 ## Status
 
-**Xente là core development environment. IEEE-CIS là optional external robustness.**
+**Xente và IEEE-CIS đều là core empirical scenarios.**
 
-File này không còn có nghĩa hai dataset bắt buộc phải hoàn thành ngang nhau.
+Khác nhau ở **vai trò**, không phải mức độ quan trọng.
 
-## Vì sao thu gọn?
+- Xente: customer/history-rich.
+- IEEE-CIS: card/device/identity-rich.
 
-KLTN đang phát triển trực tiếp từ đề án FinRisk.
+Không merge hai dataset thành một population.
 
-Để hoàn thành contribution chính, cần trước hết đóng vòng đầy đủ:
+## Scenario A — Xente
 
-```text
-Xente transaction state
-→ risk
-→ policy
-→ queue/analyst
-→ outcome
-→ adaptive fraudster feedback
-```
+Dùng để ground:
+- customer identity/history;
+- real chronology;
+- Value/Amount;
+- product/provider/channel;
+- customer-centric risk features;
+- scenario-specific risk model.
 
-Nếu chia effort sang hai dataset trước khi vòng này hoàn chỉnh, scope tăng mạnh nhưng RQ chính chưa được trả lời.
+Điểm mạnh:
+- agent/state dễ diễn giải;
+- repeated behavior rõ.
 
-## Scenario A — Xente (CORE)
+Điểm yếu:
+- fraud sample hiếm;
+- Value signal rất mạnh;
+- device/card context hạn chế.
 
-Vai trò:
-- empirical transaction chronology;
-- repeated CustomerId;
-- customer-history state;
-- risk-model training/evaluation;
-- queue/policy replay;
-- empirical grounding cho counterfactual fraud generation.
+## Scenario B — IEEE-CIS
 
-## Scenario B — IEEE-CIS (OPTIONAL)
+Dùng để ground:
+- online/card/e-commerce transaction context;
+- TransactionAmt / ProductCD;
+- card/device/identity heterogeneity;
+- address/email relations;
+- count/time-delta/match/rich detector features;
+- scenario-specific risk model.
 
-Vai trò nếu thời gian cho phép:
-- online/card/e-commerce-like robustness environment;
-- kiểm tra qualitative policy conclusions có phụ thuộc mạnh vào Xente hay không.
+Điểm mạnh:
+- richer detection context;
+- larger/heterogeneous environment;
+- distribution shift hữu ích cho robustness.
 
-Giới hạn:
-- many anonymized features;
-- TransactionDT là relative time;
-- true persistent customer identity kém rõ hơn Xente.
+Điểm yếu:
+- many masked features;
+- no true CustomerId;
+- relative TransactionDT;
+- state phải dùng entity proxies.
 
-## Câu hỏi cross-scenario nếu triển khai
+## Nguyên tắc chung
 
-> Khi cùng một policy framework được parameterize độc lập ở Xente và IEEE-CIS, qualitative policy conclusions có giữ được không?
+Giữ giống nhau:
+- policy interface;
+- queue/analyst mechanism;
+- fraudster update rule;
+- capacity normalization;
+- outcome definitions;
+- experiment protocol.
 
-Không yêu cầu:
-- merge datasets;
-- transfer cùng một classifier;
-- hoàn thành IEEE để core thesis hợp lệ.
+Cho phép khác nhau:
+- agent/entity state;
+- feature engineering;
+- risk model;
+- fraud prevalence;
+- transaction/context distributions;
+- strategy-to-feature mapping.
 
-## Quyết định thực thi
+## Câu hỏi cross-scenario
 
-Thứ tự:
-1. full Xente model;
-2. final Xente experiment;
-3. Xente sensitivity;
-4. final writing draft;
-5. chỉ sau đó mới quyết định IEEE-CIS replication.
+> Cùng một fraud-management framework có cho qualitative policy conclusions tương tự khi parameterize độc lập trên Xente và IEEE-CIS hay không?
+
+Nếu giống:
+- conclusion robust hơn.
+
+Nếu khác:
+- policy effect là environment-dependent.
+
+## Thứ tự triển khai
+
+1. hoàn thiện engine trên Xente;
+2. freeze common schema/interfaces;
+3. build IEEE-CIS adapter;
+4. chạy cùng 12 configurations;
+5. compare 12 Xente + 12 IEEE.
