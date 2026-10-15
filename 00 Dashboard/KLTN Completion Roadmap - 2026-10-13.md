@@ -51,18 +51,18 @@ Xente + IEEE-CIS
 ## Current work — IEEE-CIS
 
 ### IEEE executable data/risk layer
-- [ ] materialize raw IEEE transaction/identity data from existing Library zip
-- [ ] implement chronological split
-- [ ] freeze entity proxy from prior EDA
-- [ ] build leakage-safe entity/history features
-- [ ] build missingness/context features
-- [ ] train interpretable baseline risk model
-- [ ] validate PR-AUC / ROC-AUC / calibration / temporal drift
-- [ ] save validation/test risk scores + model
-- [ ] canonical adapter verification
+- [x] materialize raw IEEE transaction/identity data from existing Library zip
+- [x] implement chronological split
+- [x] freeze entity proxy from prior EDA: card1 + addr1
+- [x] build leakage-safe entity/history features
+- [x] build missingness/context features
+- [x] train scalable streaming baseline risk model
+- [x] validate PR-AUC / ROC-AUC / calibration / forward drift
+- [x] save validation/test risk scores + model bundle
+- [x] canonical adapter interface already available
 
 ### IEEE policy / adaptive layer
-- [ ] Fixed vs Capacity-aware empirical replay
+- [x] Fixed vs Capacity-aware empirical replay
 - [ ] IEEE feature-level fraud strategy mapping
 - [ ] Static comparator
 - [ ] Adaptive closed loop
@@ -98,8 +98,8 @@ Xente + IEEE-CIS
 
 ## Immediate next task
 
-1. use the existing IEEE-CIS raw data already in Library;
-2. turn the completed IEEE EDA into an executable chronological feature/state builder;
-3. train the first IEEE risk baseline and output validation/test risk scores;
-4. feed those scores into the shared policy engine;
-5. then build the IEEE Static/Adaptive closed loop.
+1. build IEEE feature-level fraud strategy mapping from interpretable fields;
+2. rescore generated fraud through the frozen IEEE baseline;
+3. connect StaticMixture / Adaptive fraudster to the shared policy + FIFO queue engine;
+4. run the first IEEE closed-loop pilot;
+5. then freeze parameters and run the 12 IEEE core configurations.
