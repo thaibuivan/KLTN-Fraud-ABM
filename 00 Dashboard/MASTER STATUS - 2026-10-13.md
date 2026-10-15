@@ -298,27 +298,50 @@ Still needed for Xente before final thesis submission:
 
 **Do not rerun the main Xente design unless code semantics or frozen parameters change.**
 
-## 10. IEEE-CIS final scenario — NEXT MAJOR IMPLEMENTATION BLOCK
+## 10. IEEE-CIS final scenario — EMPIRICAL BASELINE + POLICY REPLAY DONE
 
-Already done:
-- full EDA;
-- Data-to-ABM mapping;
-- entity-proxy analysis;
-- two-scenario role;
-- common canonical adapter;
-- shared policy/queue architecture.
+Completed:
+- full EDA / Data-to-ABM mapping;
+- entity proxy frozen as **card1 + addr1**;
+- memory-bounded chronological feature/state pipeline;
+- train-only frequency encoding + sparse categorical encoding;
+- past-only entity-history features;
+- streaming SGD log-loss baseline;
+- validation/test risk_probability outputs;
+- empirical Fixed vs Capacity-aware policy replay.
+
+Canonical files:
+- [[IEEE-CIS Executable Baseline Design v1.0]]
+- [[IEEE-CIS Baseline and Policy Replay v0.1]]
+- `scripts/train_ieee_streaming_baseline.py`
+- `scripts/run_ieee_policy_replay.py`
+
+Executed baseline:
+- validation PR-AUC ≈ **0.3644**;
+- test PR-AUC ≈ **0.3840**;
+- validation ROC-AUC ≈ **0.8218**;
+- test ROC-AUC ≈ **0.8219**.
+
+Important:
+- IEEE risk separation is materially weaker than Xente;
+- forward calibration drift is visible;
+- this supports IEEE as a genuinely complementary Scenario B.
+
+Pre-adaptation policy replay:
+- validation-tail thresholds = 1.00% / 0.75% / 0.50%;
+- Low / Medium / High capacity = 0.75 / 1.00 / 1.25;
+- FIFO core queue;
+- Capacity-aware materially reduced backlog/waiting/intervention and improved within-horizon fraud interception in this replay.
 
 Still needed:
-1. build executable chronological IEEE feature pipeline from the completed EDA;
-2. freeze entity proxy used for persistent state;
-3. train/validate IEEE scenario-specific risk model;
-4. generate validation/test risk_probability outputs;
-5. run Fixed vs Capacity-aware empirical replay;
-6. build IEEE feature-level fraud strategy generator;
-7. reuse Static / Adaptive learning mechanism with IEEE-normalized reward scale;
-8. run 12 IEEE core configurations;
-9. seed convergence + targeted sensitivity;
-10. final IEEE tables/figures.
+1. build IEEE feature-level fraud strategy generator from interpretable empirical dimensions;
+2. reuse StaticMixture / Adaptive learning mechanism with IEEE-normalized reward scale;
+3. rescore generated IEEE fraud events through the IEEE model;
+4. run first IEEE closed-loop integration pilot;
+5. freeze BLOCK + adaptive parameters for IEEE;
+6. run 12 IEEE core configurations;
+7. seed convergence + targeted sensitivity;
+8. final IEEE tables/figures.
 
 ## 11. Cross-scenario design — DESIGN DONE, RESULTS WAITING FOR IEEE
 
@@ -420,27 +443,25 @@ Xente result prose can now be drafted, but final thesis Results should wait unti
 ## 16. Critical path from NOW
 
 ```text
-A. Build executable IEEE-CIS chronological feature/state pipeline
+A. Build IEEE feature-level fraud strategy generator
         ↓
-B. Train + validate IEEE risk model
+B. Run first IEEE Static → Adaptive closed-loop pilot
         ↓
-C. Run IEEE empirical policy replay
+C. Freeze IEEE BLOCK / adaptive / generator semantics
         ↓
-D. Build IEEE feature-level Static / Adaptive closed loop
+D. Run 12 IEEE configurations + convergence/sensitivity
         ↓
-E. Run 12 IEEE configurations + convergence/sensitivity
+E. Cross-scenario comparison with Xente
         ↓
-F. Cross-scenario comparison with Xente
+F. Final parameter registry + validation appendix
         ↓
-G. Final parameter registry + validation appendix
-        ↓
-H. Write final KLTN
+G. Write final KLTN
 ```
 
 ## 17. Immediate next task
 
-**Do not do more Xente redesign.**
+**Do not rebuild the IEEE baseline or repeat the policy replay.**
 
 Next technical task:
 
-> Convert the completed IEEE-CIS EDA/Data-to-ABM decisions into an executable chronological feature pipeline, freeze the persistent entity proxy, and train the first IEEE scenario-specific risk baseline that outputs validation/test risk probabilities for the shared policy engine.
+> Build the IEEE-CIS feature-level fraud generator using only interpretable dimensions supported by the completed EDA (amount, product, card/entity, device/identity availability/context, relative timing where defensible), preserve masked C/D/M/V fields only as detector context, rescore generated fraud through the frozen IEEE risk model, and run the first Static vs Adaptive closed-loop pilot.
