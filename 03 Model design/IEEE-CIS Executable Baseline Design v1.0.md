@@ -1,9 +1,17 @@
-# IEEE-CIS Executable Baseline Design v1.0
+# IEEE-CIS Executable Baseline Design v1.1
 
 ## Status
 
-Implementation design translated directly from the completed IEEE EDA. This is
-not a new EDA pass.
+**Executed.** This is the Scenario B executable baseline translated from the completed IEEE EDA. It is not a new EDA pass.
+
+## Why streaming execution
+
+A first full-width batch materialization attempt exceeded the available working-memory envelope. The final executable path therefore preserves the same feature logic but computes it in bounded chunks.
+
+Canonical runner:
+- `scripts/train_ieee_streaming_baseline.py`
+
+The older `build_ieee_features.py` remains useful as a readable feature specification / high-memory path, but it is not the preferred execution route for the full 590,540-row dataset.
 
 ## Persistent entity proxy
 
@@ -13,36 +21,36 @@ Core proxy:
 entity_proxy = card1 + addr1
 ```
 
-Reason from prior EDA:
+From prior EDA:
 - 39,974 unique proxies;
 - median 2 transactions/proxy;
 - P95 45;
 - max 9,928;
 - 3,439 fraud proxy entities;
-- 32% cold-start at first observed fraud.
+- about 32% cold-start at first observed fraud.
 
 Boundary:
+
 > This is an entity proxy, not a true CustomerId.
 
 ## Past-only entity state
 
-Executable features:
+Streaming features:
 - prior_tx_count;
 - prior_amount_mean/std;
 - gap_seconds;
 - prior same-product share;
 - cold_start_entity.
 
-All are calculated before the current event is added to state.
+Each row is scored from state **before** the current event updates the proxy state.
 
-## Current transaction / detection context
+## Detection context
 
-Interpretable/current context:
+Current/interpretable context:
 - TransactionAmt;
 - ProductCD;
-- card1-card6;
-- addr1/addr2;
-- dist1/dist2;
+- card1/card4/card6;
+- addr1/dist1;
 - P/R email;
 - identity availability;
 - DeviceType / DeviceInfo;
@@ -52,30 +60,24 @@ Masked detector context:
 - C1-C14;
 - D1-D15;
 - M1-M9;
-- V45, V257, V44, V86, V87, V246, V244, V158, V242, V156,
-  V149, V52, V51, V201, V200.
-
-The selected V features come from the prior EDA separation screen.
+- selected V fields from prior EDA.
 
 Boundary:
-- masked features may support risk scoring;
+- masked features support risk scoring;
 - they are not interpreted as fraudster actions.
 
 ## Missingness
 
-Explicit features:
+Explicit:
 - identity_available;
 - identity_missing_count;
 - detector_missing_count;
 - email_both_missing;
 - email_match.
 
-This follows the prior EDA finding that identity/missingness is not random with
-respect to fraud label and also shifts over time.
-
 ## Encoding
 
-High-cardinality fields are frequency-encoded using TRAIN ONLY:
+Train-only high-cardinality frequency encoding:
 - card1;
 - entity_proxy;
 - DeviceInfo;
@@ -83,11 +85,17 @@ High-cardinality fields are frequency-encoded using TRAIN ONLY:
 - id_33;
 - P/R email domains.
 
-Low-cardinality context is one-hot encoded.
+Low-cardinality context:
+- fixed train-only categorical vocabulary;
+- sparse one-hot encoding.
+
+Numeric features:
+- train-only StandardScaler fitted incrementally;
+- NaNs are mapped to the standardized mean (0) after scaling.
 
 ## Temporal design
 
-Use only labelled IEEE training data for thesis evaluation:
+Use only labelled IEEE training data:
 
 ```text
 first 70% chronological  -> train
@@ -95,28 +103,59 @@ next 15%                -> validation
 final 15%               -> test
 ```
 
-TransactionDT remains relative time. No calendar-date interpretation is added.
+TransactionDT remains relative time.
 
 ## Baseline model
 
-Regularized logistic regression.
+Streaming `SGDClassifier(loss="log_loss")`.
 
-Purpose:
-- interpretable first probability score;
-- common risk_probability interface for the shared policy engine;
-- classifier novelty is not the thesis contribution.
+Frozen pilot regularization:
+- alpha = **1e-3**
 
-Outputs:
+Reason:
+- the earlier alpha = 1e-5 pilot produced severe 0/1 probability saturation in the validation tail;
+- alpha = 1e-3 improved ranking/calibration and produced a usable continuous score tail for policy thresholds.
+
+Classifier novelty is not the contribution.
+
+## Executed metrics
+
+| Split | Rows | Fraud | PR-AUC | ROC-AUC | Brier | Mean predicted p |
+|---|---:|---:|---:|---:|---:|---:|
+| Validation | 88,581 | 3,042 | 0.3644 | 0.8218 | 0.02840 | 0.0653 |
+| Test | 88,581 | 3,083 | 0.3840 | 0.8219 | 0.03370 | 0.0946 |
+
+Test fraud rate is about 3.48%, while mean predicted probability is 9.46%.
+
+Interpretation:
+- ranking is materially useful but much weaker than Xente;
+- calibration drifts forward in time;
+- this is exactly the richer / less separable environment wanted for Scenario B;
+- policy thresholds should remain validation-tail calibrated rather than treated as universal probability cutoffs.
+
+## 1% operating point
+
+Validation:
+- reviewed 886;
+- fraud reviewed 663;
+- precision 74.8%;
+- recall 21.8%.
+
+Test:
+- reviewed 886;
+- fraud reviewed 707;
+- precision 79.8%;
+- recall 22.9%.
+
+## Outputs
+
 - validation_scores.csv;
 - test_scores.csv;
 - metrics.json;
 - model_bundle.joblib.
 
-## Next after execution
+## Next
 
-1. inspect PR-AUC / calibration / temporal behavior;
-2. run Fixed vs Capacity-aware policy replay;
-3. define IEEE feature-level fraud strategy dimensions only from interpretable
-   fields;
-4. reuse the same Static / Adaptive learning mechanism and normalized capacity
-   semantics as Xente.
+1. integrated Fixed vs Capacity-aware replay;
+2. IEEE feature-level fraud strategy generator using interpretable context only;
+3. reuse Static / Adaptive learning and normalized reward semantics from Xente.
