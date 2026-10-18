@@ -25,6 +25,7 @@ from scripts.adaptive_fraudster import AdaptiveFraudster, StaticMixtureFraudster
 from scripts.fraud_policies import FixedThresholdPolicy, TieredCapacityAwarePolicy
 from scripts.ieee_feature_level_fraud import IEEEFeatureLevelFraudGenerator
 from scripts.ieee_online_scorer import IEEEOnlineRiskScorer
+from scripts.ieee_fast_online_scorer import FastIEEEOnlineRiskScorer
 from scripts.outcome_semantics import expected_outcomes_by_horizon
 from scripts.policy_queue_engine import PolicyQueueEngine
 from scripts.simulate_alert_queue import threshold_for_target_rate
@@ -109,6 +110,8 @@ def run_experiments(
     )
     rows = []
     slots = int(stream["isFraud"].sum())
+    # Do not materialize 88k wide event dictionaries per configuration.
+    column_names = list(stream.columns)
     for seed in range(seeds):
         for mode in ("static", "adaptive"):
             for policy_name in ("fixed", "capacity_aware"):
@@ -150,7 +153,8 @@ def run_experiments(
                     )
                     count = {name: 0 for name in gen.strategies}
                     attempt = 0
-                    for raw in stream.to_dict(orient="records"):
+                    for values in stream.itertuples(index=False, name=None):
+                        raw = dict(zip(column_names, values))
                         is_fraud = bool(raw["isFraud"])
                         strategy = None
                         if is_fraud:
@@ -231,17 +235,21 @@ def main():
     p.add_argument("--review-feedback", default="policy_action",
                    choices=["policy_action", "no_review_observation"])
     p.add_argument("--capacities", default="0.75,1.0,1.25")
+    p.add_argument("--scorer", choices=["reference", "fast"], default="reference",
+                   help="Use fast only after empirical equivalence audit")
     args = p.parse_args()
 
     bundle = joblib.load(args.model_bundle)
-    baseline = IEEEOnlineRiskScorer(bundle)
+    scorer_class = (IEEEOnlineRiskScorer if args.scorer == "reference"
+                    else FastIEEEOnlineRiskScorer)
+    baseline = scorer_class(bundle)
     history = pd.read_csv(args.history_context, low_memory=False)
     baseline.warm_history(history)
     frozen_state = baseline.state
     del history
 
     def scorer_factory():
-        scorer = IEEEOnlineRiskScorer(bundle)
+        scorer = scorer_class(bundle)
         scorer.state = deepcopy(frozen_state)
         return scorer
 
@@ -262,6 +270,8 @@ def main():
         json.dumps({
             "mode": "counterfactual feature-level online re-score",
             "risk_model": str(args.model_bundle),
+            "scorer": args.scorer,
+            "mandatory_condition": "run IEEE online equivalence audit before interpretation",
             "seeds": args.seeds,
             "max_test_events": args.max_test_events,
             "review_feedback": args.review_feedback,
