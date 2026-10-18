@@ -92,3 +92,36 @@ def test_unit_reward_ablation_runs_and_labels_assumption():
     assert len(out) == 4
     assert set(out["reward_amount_mode"]) == {"unit"}
     assert (out["fraud_attempt_slots"] == 4).all()
+
+
+
+def test_disjoint_seed_batches_are_deterministic_and_keep_absolute_seed_ids():
+    """Batch 0..1 and batch 4..5 cannot accidentally share seed IDs."""
+    test = donor_rows().iloc[:6].copy()
+    test["TransactionID"] = list(range(901, 907))
+    test["TransactionDT"] = [2_100_000 + i * 3600 for i in range(6)]
+    test["isFraud"] = [0, 1, 1, 0, 1, 0]
+    common = dict(
+        validation_scores=validation(),
+        validation_donors=donor_rows(),
+        test_context=test,
+        scorer_factory=TinyScorer,
+        seeds=2,
+        capacity_ratios=(0.75,),
+    )
+    first = run_experiments(**common, seed_start=0)
+    second = run_experiments(**common, seed_start=4)
+    repeated = run_experiments(**common, seed_start=4)
+    assert set(first["seed"]) == {0, 1}
+    assert set(second["seed"]) == {4, 5}
+    assert len(first) == len(second) == 8
+    pd.testing.assert_frame_equal(second, repeated)
+
+
+def test_reject_negative_start_seed():
+    test = donor_rows().iloc[:3].copy()
+    with __import__("pytest").raises(ValueError, match="Invalid"):
+        run_experiments(
+            validation(), donor_rows(), test, TinyScorer,
+            seeds=1, seed_start=-1,
+        )
