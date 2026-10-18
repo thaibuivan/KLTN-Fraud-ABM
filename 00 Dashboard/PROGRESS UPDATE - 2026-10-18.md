@@ -69,3 +69,21 @@ python -m scripts.prepare_ieee_closed_loop \
 ## 7. Green SM information handling
 
 No internal Green SM document or fact was read, uploaded, committed or cited in this milestone. Follow the user's pending authorization check with management before any external academic use; public data and peer-reviewed literature remain sufficient to continue the thesis.
+
+
+---
+
+## Addendum — 18 Oct, later execution checkpoint (supersedes older pending flags above)
+
+**New actual empirical progress:**
+- IEEE canonical streaming-SGD baseline independently reproduced from original raw archive, matching reported validation/test PR-AUC and ROC-AUC to displayed precision. Artifacts remained private in working environment.
+- Prepared all IEEE test contexts from original labeled training archive; history 501,959, validation donors 3,042, test 88,581 (3,083 fraud attempt slots).
+- Audited fast per-event IEEE scorer against frozen baseline probabilities for ALL 88,581 unchanged test events: maximum absolute difference **4.314e-7**, below **1e-6** threshold.
+- Built repo IEEE Static/Adaptive closed-loop runner, reward ablation controls, score equivalence audit, summarization utility, tests, and full Vietnamese Methodology Draft v1.1.
+- Local empirical **full-test 12 configurations × 5 seeds** pilot run (60 cells), documented in **05 Experiments/IEEE-CIS Adaptive Full-Test Pilot v0.2.md**. This is PRELIMINARY and locally mirrored to repo logic: canonical repo runner cross-check is still pending.
+- Reward/value ablation and REVIEW observability ablation executed for one full-test seed as exploratory sensitivity.
+- **60 unit/integration tests passed** on GitHub Actions at latest verified head before the pilot note commit. New documentation commit may trigger CI again.
+
+**Current critical path:** (1) canonical runner replay with saved bundle and compared outputs; (2) expand seed count and convergence/sensitivity for IEEE; (3) Xente–IEEE paired/normalized cross-scenario comparison; (4) final literature/parameter provenance and academic writing; (5) GVHD approval; (6) merge draft PR when reviewed.
+
+**Do not** label IEEE main experiment fully completed or the thesis finished yet.
