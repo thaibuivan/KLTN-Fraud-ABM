@@ -93,3 +93,25 @@ def test_chunked_warmup_equal_to_single_event_warmup():
         [batch.score_and_update(events[11])],
         atol=1e-10, rtol=1e-10,
     )
+
+
+def test_fast_scalar_score_matches_frozen_offline_matrix():
+    from scripts.ieee_fast_online_scorer import FastIEEEOnlineRiskScorer
+    events = synthetic_events()
+    bundle, expected = fitted_synthetic_bundle(events)
+    scorer = FastIEEEOnlineRiskScorer(bundle)
+    actual = [scorer.score_and_update(e) for e in events]
+    assert_allclose(actual, expected, atol=2e-6, rtol=2e-6)
+
+
+def test_fast_matches_reference_state_over_longer_sequence():
+    from scripts.ieee_fast_online_scorer import FastIEEEOnlineRiskScorer
+    events = synthetic_events()
+    bundle, _ = fitted_synthetic_bundle(events)
+    slow = IEEEOnlineRiskScorer(bundle)
+    fast = FastIEEEOnlineRiskScorer(bundle)
+    for e in events:
+        assert_allclose(
+            fast.score_and_update(e), slow.score_and_update(e),
+            atol=2e-6, rtol=2e-6,
+        )
