@@ -64,6 +64,31 @@ class IEEEOnlineRiskScorer:
             raise ValueError("Risk model returned invalid probability")
         return p
 
+    def warm_history(self, history: pd.DataFrame, *, chunksize: int = 20000) -> None:
+        """Advance entity state over pre-test chronology without predicting.
+
+        Do not read a test-row outcome or update the trained classifier.
+        Faster than one-row pandas calls for 500k pre-test transactions.
+        """
+        required = {"card1", "addr1", "ProductCD", "TransactionAmt", "TransactionDT"}
+        missing = required.difference(history.columns)
+        if missing:
+            raise ValueError(f"Missing history fields: {sorted(missing)}")
+        if chunksize < 1:
+            raise ValueError("chunksize must be positive")
+        times = pd.to_numeric(history["TransactionDT"], errors="raise")
+        if not times.is_monotonic_increasing:
+            raise ValueError("History must be chronological")
+        for offset in range(0, len(history), chunksize):
+            part = history.iloc[offset:offset + chunksize]
+            entities = make_entity_proxy(part["card1"], part["addr1"])
+            self.state.features_then_update(
+                entities=entities.astype(str).to_numpy(),
+                amounts=pd.to_numeric(part["TransactionAmt"], errors="raise").to_numpy(dtype=float),
+                times=pd.to_numeric(part["TransactionDT"], errors="raise").to_numpy(dtype=np.int64),
+                products=part["ProductCD"].astype("string").fillna("__MISSING__").to_numpy(),
+            )
+
     def observe_past_only(self, event: dict) -> None:
         """Warm history without predicting or updating the learned model."""
         part = self._as_part(event)
