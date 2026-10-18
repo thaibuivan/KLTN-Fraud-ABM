@@ -30,6 +30,7 @@ def prepare(transaction, identity, out_dir: str | Path, *, chunksize=5000):
     train_end = int(n * .70)
     validation_end = int(n * .85)
     identity_df = pd.read_csv(identity, usecols=IDENTITY_COLUMNS)
+    identity_df["identity_available"] = 1
     history_path = out_dir / "history_context.csv"
     donor_path = out_dir / "validation_fraud_donors.csv"
     test_path = out_dir / "test_context.csv"
