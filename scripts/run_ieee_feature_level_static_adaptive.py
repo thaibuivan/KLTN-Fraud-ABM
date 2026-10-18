@@ -73,6 +73,7 @@ def run_experiments(
     seeds: int = 1,
     capacity_ratios=(0.75, 1.0, 1.25),
     review_feedback: str = "policy_action",
+    reward_amount_mode: str = "value",
     learning_rate: float = 0.15,
     epsilon: float = 0.10,
     soft_backlog_hours: float = 24.0,
@@ -84,6 +85,8 @@ def run_experiments(
         raise ValueError("Invalid seeds/learning parameters")
     if review_feedback not in {"policy_action", "no_review_observation"}:
         raise ValueError("Unknown REVIEW observability assumption")
+    if reward_amount_mode not in {"value", "unit"}:
+        raise ValueError("Unknown reward amount mode")
     if any(float(c) <= 0 for c in capacity_ratios):
         raise ValueError("Capacity ratios must be positive")
     cal = calibration(validation_scores)
@@ -181,8 +184,10 @@ def run_experiments(
                         })
                         if is_fraud:
                             if review_feedback == "policy_action" or action.value != "REVIEW":
+                                reward_input_amount = (float(event["TransactionAmt"])
+                                    if reward_amount_mode == "value" else gen.reward_scale)
                                 fraudster.observe(
-                                    action.value, float(event["TransactionAmt"]), attempt
+                                    action.value, reward_input_amount, attempt
                                 )
                             attempt += 1
                     summary, decisions, reviews = engine.finalize(horizon)
@@ -196,6 +201,7 @@ def run_experiments(
                         "capacity_ratio": float(capacity_ratio),
                         "fraud_attempt_slots": slots,
                         "review_feedback_assumption": review_feedback,
+                        "reward_amount_mode": reward_amount_mode,
                         "alpha": learning_rate,
                         "epsilon": epsilon,
                         "max_test_events": len(stream),
@@ -235,6 +241,9 @@ def main():
     p.add_argument("--review-feedback", default="policy_action",
                    choices=["policy_action", "no_review_observation"])
     p.add_argument("--capacities", default="0.75,1.0,1.25")
+    p.add_argument("--alpha", type=float, default=0.15)
+    p.add_argument("--epsilon", type=float, default=0.10)
+    p.add_argument("--reward-amount-mode", choices=["value", "unit"], default="value")
     p.add_argument("--scorer", choices=["reference", "fast"], default="reference",
                    help="Use fast only after empirical equivalence audit")
     args = p.parse_args()
@@ -261,6 +270,9 @@ def main():
         seeds=args.seeds,
         capacity_ratios=tuple(float(x) for x in args.capacities.split(",")),
         review_feedback=args.review_feedback,
+        reward_amount_mode=args.reward_amount_mode,
+        learning_rate=args.alpha,
+        epsilon=args.epsilon,
         max_test_events=args.max_test_events,
     )
     folder = Path(args.output_dir)
@@ -275,6 +287,9 @@ def main():
             "seeds": args.seeds,
             "max_test_events": args.max_test_events,
             "review_feedback": args.review_feedback,
+            "reward_amount_mode": args.reward_amount_mode,
+            "alpha": args.alpha,
+            "epsilon": args.epsilon,
             "validation_generator_only": True,
             "pretest_history_warmup": True,
             "claim_boundary": "research stress scenario, not real-world bank loss",
