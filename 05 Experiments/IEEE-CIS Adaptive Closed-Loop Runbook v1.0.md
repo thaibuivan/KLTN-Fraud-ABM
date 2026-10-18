@@ -123,3 +123,42 @@ For sensitivity to review prevention, the runner stores assumed q=0/0.5/1 accoun
 **Completed:** code added, CI integration tests, reference-vs-offline synthetic equivalence, preparer executed on the real IEEE raw archive, real data split counts verified.
 
 **Still required:** actual frozen model bundle/score artifact must be loaded or retrained in the execution environment; real held-out score audit; full IEEE adaptive closed-loop smoke; full 12×N-seed output; cross-scenario analysis; final paper/appendices. Do not claim these are done based on passing pytest alone.
+
+
+## 9. Independent seed batches / resumable replication — added 18 Oct
+
+The canonical runner now accepts **`--seed-start`** (absolute initial seed ID) and **`--seeds`** (batch size); the run output has the absolute `seed` column. This permits continuation of a 5-seed pilot without recomputing seed IDs 0–4.
+
+Example *once private data/model artifacts have been made available in the local authorized environment*:
+
+```bash
+python -m scripts.run_ieee_feature_level_static_adaptive \
+  --validation-scores outputs/local/ieee_streaming_baseline/validation_scores.csv \
+  --validation-donors outputs/local/ieee_closed_loop/validation_fraud_donors.csv \
+  --test-context outputs/local/ieee_closed_loop/test_context.csv \
+  --history-context outputs/local/ieee_closed_loop/history_context.csv \
+  --model-bundle outputs/local/ieee_streaming_baseline/model_bundle.joblib \
+  --seed-start 5 --seeds 5 --scorer fast \
+  --output-dir outputs/local/ieee_closed_loop/seeds_05_09
+```
+
+Continue for non-overlapping `--seed-start 10 --seeds 5`, etc., until Monte Carlo convergence. **Do not assume the mirrored 0–4 pilot corresponds exactly to the canonical runner:** first run canonical `--seed-start 0 --seeds 5` independently, compare outputs to archived mirrored pilot by key, then decide whether to reuse/combine. For exact comparison use `seed, fraudster_mode, policy, capacity_ratio`; compare core metrics with declared numerical tolerance and flag discrepancies, never silently concatenate conflicting runs.
+
+Combination check (illustrative; execute locally where CSVs exist):
+
+```python
+import pathlib, pandas as pd
+files = sorted(pathlib.Path("outputs/local/ieee_closed_loop").glob("seeds_*/ieee_closed_loop_runs.csv"))
+rows = pd.concat((pd.read_csv(f) for f in files), ignore_index=True)
+keys = ["seed", "fraudster_mode", "policy", "capacity_ratio"]
+assert not rows.duplicated(keys).any(), "Overlapping or duplicated seed-condition cells"
+assert set(rows["capacity_ratio"]) == {0.75, 1.0, 1.25}
+assert rows.groupby("seed").size().eq(12).all(), "A seed is missing core cells"
+rows.to_csv("outputs/local/ieee_closed_loop/combined_runs.csv", index=False)
+```
+
+Run summary on `combined_runs.csv`, not pilot-only and never with duplicate seeds. Archive: checked-out commit SHA, command, sanitized package versions, SHA256 of input artifacts (not raw files), seed start/end, final CSV SHA256, dates, and any deviations from baseline. Never commit raw IEEE/Xente rows, fitted model bundle, or unapproved company content into public GitHub.
+
+**Validation of new interface:** `tests/test_ieee_closed_loop_runner.py` tests reproducible non-overlapping batches and invalid negative seeds. GitHub CI is software verification, not empirical validity.
+
+**Open blocker as of 18 Oct:** The ChatGPT Project Library currently exposes the archived private reproduction ZIPs in metadata, but byte materialization in this execution environment was denied. Therefore the archived 5-seed pilot could be read from its documentation but the canonical full-data rerun was **not executed in this turn**. Do not state otherwise.
