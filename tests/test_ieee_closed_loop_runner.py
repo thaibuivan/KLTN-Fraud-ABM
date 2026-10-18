@@ -77,3 +77,18 @@ def test_review_feedback_observability_is_explicit():
     assert set(out["review_feedback_assumption"]) == {"no_review_observation"}
     for q in ("0p0", "0p5", "1p0"):
         assert f"assumed_q_{q}_prevented_value" in out.columns
+
+
+def test_unit_reward_ablation_runs_and_labels_assumption():
+    test = donor_rows().iloc[:6].copy()
+    test["TransactionID"] = list(range(800, 806))
+    test["TransactionDT"] = [1_400_000 + i * 3600 for i in range(6)]
+    test["isFraud"] = [1, 1, 0, 1, 0, 1]
+    out = run_experiments(
+        validation(), donor_rows(), test, TinyScorer,
+        seeds=1, capacity_ratios=(1.0,),
+        reward_amount_mode="unit",
+    )
+    assert len(out) == 4
+    assert set(out["reward_amount_mode"]) == {"unit"}
+    assert (out["fraud_attempt_slots"] == 4).all()
