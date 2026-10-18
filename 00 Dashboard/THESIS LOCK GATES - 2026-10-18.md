@@ -39,3 +39,30 @@
 **What is not yet defensible:** “IEEE main fully converged”, “24 configurations completed at final inferential quality”, “fraudster cognition reconstructed”, “capacity-aware universally optimal”, “fraud value successfully prevented in a real bank”, or “thesis ready for submission”.
 
 Next owner action: run canonical IEEE artifact-based seeds 0–4 on authorized local environment, compare against the private pilot ZIP, and advance seed batches. Next writing action: refine introduction and research-gap text after GVHD feedback.
+
+
+---
+
+## E. Implementation and independent data validation addendum — 18/10/2026 (later work)
+
+**New verified additions:**
+
+- [x] Independently parsed the original labeled IEEE-CIS public zip (590,540 chronological transactions), verifying train/validation/test = **413,378 / 88,581 / 88,581**, fraud = **14,538 / 3,042 / 3,083**, and identity-row availability = **26.5885% / 17.6720% / 21.0745%**.
+- [x] Audited validation-fraud donor terciles = **50 / 117** and pool sizes **1,052 / 1,030 / 960**; validation fraud median = **77**. Empirical ProductCD composition differs materially across regimes (C: low **62.2%** vs high **10.5%**; W: low **24.6%** vs high **70.9%**). These are **joint donor-context changes**, not causal evidence about fraudster choosing only TransactionAmt.
+- [x] Added `scripts/audit_ieee_donor_regimes.py`, tests, and `05 Experiments/IEEE-CIS Raw Validation and Donor Regime Audit v1.0.md`. Test fraud may be used only for held-out **post-hoc diagnostics**, not calibration or donor construction.
+- [x] Added a resumable, privacy-preserving **canonical IEEE batch runner** at `scripts/complete_ieee_experiments.py` with `--seed-start` batches, mandatory scorer audit, 12-cell completeness checks, fail-closed behavior on partial outputs and private experiment manifest.
+- [x] Produced an integrated Vietnamese six-chapter Word/PDF **working manuscript** with empirical split tables, Xente 50-seed candidate summaries, **IEEE five-seed clearly marked PILOT**, sensitivity/limitation discussion, citations and appendices. Files were generated in the conversation's working container, not committed to public GitHub as binary artifacts.
+- [x] Generated aggregate IEEE/data and provisional policy-contrast figures, packaged **without raw transaction IDs**; charts use observed split data or recorded run-summary means, NOT reconstructed seed-level intervals.
+
+**Hard gate still OPEN:** Private IEEE frozen bundle and prior five-seed pilot ZIPs were listed in Library but could not be exported through the authorized materialization path in this session. Therefore the canonical 12×5 replay **was not rerun**, the final 12×N batch **was not executed**, and final IEEE confidence intervals/cross-scenario inference cannot be responsibly reported as complete. The new automated runner enables these steps when inputs are available on an authorized local machine:
+
+```bash
+python -m scripts.complete_ieee_experiments \\
+  --zip /private/ieee-fraud-detection.zip \\
+  --output-dir outputs/local/ieee_final \\
+  --target-seeds 30 --batch-seeds 5 --execute
+```
+
+The wrapper rebuilds missing frozen model outputs from the original competition zip and runs the real-data full scorer audit **before** simulation; it can be resumed without silently overwriting prior batch results. Running it can take substantial time/memory; use authorized private storage, keep raw data out of public GitHub.
+
+**Not a completed thesis until:** canonical IEEE output + convergence + multi-seed reward/feedback/outcome sensitivity + seed-level cross-scenario contrasts and intervals + figure/table consistency + references + GVHD approval. Preserve draft PR until reviewed.
