@@ -71,6 +71,7 @@ def run_experiments(
     scorer_factory,
     *,
     seeds: int = 1,
+    seed_start: int = 0,
     capacity_ratios=(0.75, 1.0, 1.25),
     review_feedback: str = "policy_action",
     reward_amount_mode: str = "value",
@@ -81,7 +82,7 @@ def run_experiments(
     max_test_events: int | None = None,
 ) -> pd.DataFrame:
     """Shared scenario logic, deterministic under fixed inputs/seeds."""
-    if seeds < 1 or not (0 < learning_rate <= 1) or not (0 <= epsilon <= 1):
+    if seeds < 1 or seed_start < 0 or not (0 < learning_rate <= 1) or not (0 <= epsilon <= 1):
         raise ValueError("Invalid seeds/learning parameters")
     if review_feedback not in {"policy_action", "no_review_observation"}:
         raise ValueError("Unknown REVIEW observability assumption")
@@ -115,7 +116,7 @@ def run_experiments(
     slots = int(stream["isFraud"].sum())
     # Do not materialize 88k wide event dictionaries per configuration.
     column_names = list(stream.columns)
-    for seed in range(seeds):
+    for seed in range(seed_start, seed_start + seeds):
         for mode in ("static", "adaptive"):
             for policy_name in ("fixed", "capacity_aware"):
                 for capacity_ratio in capacity_ratios:
@@ -237,6 +238,8 @@ def main():
     p.add_argument("--model-bundle", required=True)
     p.add_argument("--output-dir", required=True)
     p.add_argument("--seeds", type=int, default=1)
+    p.add_argument("--seed-start", type=int, default=0,
+                   help="First absolute seed ID in this independent batch")
     p.add_argument("--max-test-events", type=int, default=None)
     p.add_argument("--review-feedback", default="policy_action",
                    choices=["policy_action", "no_review_observation"])
@@ -268,6 +271,7 @@ def main():
         pd.read_csv(args.test_context, low_memory=False),
         scorer_factory,
         seeds=args.seeds,
+        seed_start=args.seed_start,
         capacity_ratios=tuple(float(x) for x in args.capacities.split(",")),
         review_feedback=args.review_feedback,
         reward_amount_mode=args.reward_amount_mode,
@@ -285,6 +289,8 @@ def main():
             "scorer": args.scorer,
             "mandatory_condition": "run IEEE online equivalence audit before interpretation",
             "seeds": args.seeds,
+            "seed_start": args.seed_start,
+            "seed_end_exclusive": args.seed_start + args.seeds,
             "max_test_events": args.max_test_events,
             "review_feedback": args.review_feedback,
             "reward_amount_mode": args.reward_amount_mode,
