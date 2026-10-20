@@ -82,3 +82,19 @@ Các giả thuyết không được điều chỉnh hậu nghiệm để chỉ h
 8. Whitt, W. (1991). *A review of L=λW and extensions*. Queueing Systems, 9, 235–268. https://www.columbia.edu/~ww2040/ReviewLlamW91.pdf.
 
 **Editorial note:** Trước nộp GVHD, cần đối chiếu PDF toàn văn của các nghiên cứu sát nhất, nhập DOI/metadata vào Zotero và trích dẫn đúng format khoa/NEU. Không bổ sung thông tin Green SM nội bộ khi chưa được cấp quyền.
+
+
+## Bổ sung 20/10/2026 — Concept drift và verification latency: prior art trực tiếp về phản hồi cảnh báo
+
+Dal Pozzolo, Boracchi, Caelen, Alippi và Bontempi (2018) trình bày bối cảnh vận hành thực của một hệ thống phát hiện gian lận thẻ, nhấn mạnh đồng thời **concept drift, class imbalance và verification latency**; chỉ một phần nhỏ giao dịch được điều tra nhanh, còn nhiều nhãn chỉ được xác nhận trễ. Nghiên cứu cũng cho thấy đánh giá chính sách fraud detection phụ thuộc mạnh vào luồng phản hồi vận hành, không thể mô hình hóa mọi nhãn đã được biết tức thời. Đây là nghiên cứu cần thêm vào đoạn nền tảng của Chương 2 và phần Giới hạn mô hình, đặc biệt khi khóa luận dùng learned fraudster feedback ngay ở quyết định policy.
+
+Công trình trước đó của Dal Pozzolo và cộng sự (2015) phân biệt **investigator feedback** với **delayed supervised labels** trong credit-card fraud concept drift. Cần lưu ý hai loại thông tin này thuộc phía bộ phát hiện/điều tra; **không được** suy diễn rằng kẻ gian lận có thể quan sát trực tiếp hàng đợi REVIEW nội bộ. Vì vậy, ablation `no_review_observation` trong khóa luận là một kiểm định tính nhạy của giả định thông tin mà fraudster được cấp, chứ không phải mô tả xác suất quan sát được bằng một tập dữ liệu thật.
+
+Cách định vị đóng góp: các nghiên cứu đó đã xem xét phản hồi nhân viên và drift ở mô hình học; khóa luận tập trung ở **stress-testing downstream routing policy × finite queue × bounded fraudster strategy adaptation**, với frozen detector làm baseline và công bố rõ feedback observability như một giả định cấu trúc.
+
+**Nguồn chuẩn đã kiểm tra:**
+
+- Dal Pozzolo, A., Boracchi, G., Caelen, O., Alippi, C., & Bontempi, G. (2018). Credit Card Fraud Detection: A Realistic Modeling and a Novel Learning Strategy. *IEEE Transactions on Neural Networks and Learning Systems, 29*(8), 3784–3797. https://doi.org/10.1109/TNNLS.2017.2736643.
+- Dal Pozzolo, A., Boracchi, G., Caelen, O., Alippi, C., & Bontempi, G. (2015). Credit card fraud detection and concept-drift adaptation with delayed supervised information. *2015 International Joint Conference on Neural Networks (IJCNN)*. https://doi.org/10.1109/IJCNN.2015.7280527.
+
+Bằng chứng và phạm vi nội dung đối chiếu trên IEEE Xplore/PubMed abstracts (không giả nhận đã tái lập kết quả hoặc đọc mọi bảng trong các bài báo).
