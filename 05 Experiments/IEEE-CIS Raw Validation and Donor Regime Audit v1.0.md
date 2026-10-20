@@ -71,3 +71,26 @@ It saves only aggregated `regime_registry.csv`, `regime_product_mix.csv`, and `r
 Add the split/identity table to Data chapter; the ProductCD-by-regime matrix to data-to-ABM/generator validation appendix; explain the observed-context-bundle interpretation in Methodology. Mention the conditional-covariate dependence when discussing IEEE/Xente strategy contrasts and the limits of counterfactual identification.
 
 Source: IEEE-CIS Fraud Detection Kaggle labeled training files, original public archive in user-authorized research workspace. Aggregates were directly recomputed on 2026-10-18.
+
+
+## 7. Independent numerical re-audit — 20/10/2026
+
+The original `ieee-fraud-detection.zip` was read directly with a memory-bounded pandas chunked pipeline and the train/validation/holdout index boundaries held fixed at 413,378 and 501,959; this newly executed check reproduced the split/count/coverage numbers reported above.
+
+Additional regime-specific diagnostics (validation fraud ONLY):
+
+| Regime | Donors | Median TransactionAmt | Identity-row availability | Distinct card1+addr1 proxies |
+|---|---:|---:|---:|---:|
+| Low | 1,052 | 29.818 | 73.574% | 276 |
+| Middle | 1,030 | 78.571 | 45.534% | 356 |
+| High | 960 | 250.000 | 28.646% | 451 |
+
+The stark differences in identity coverage provide **strong evidence of context-mixture confounding** in the amount-conditioned donor resampling mechanism. A high-amount regime is not just a larger TransactionAmt; it also has a lower share of matched identity records, different ProductCD composition, and a broader collection of card/address proxies.
+
+A descriptive ProductCD × amount-regime contingency calculation over the 3,042 validation fraud donors gave chi-square ≈ **832.32** and Cramér's V ≈ **0.370**. The low-minus-high ProductCD=C proportion gap is approximately **51.65 percentage points**; an IID-within-regime nonparametric bootstrap over 1,200 draws gave an *illustrative*, **not cluster-robust**, percentile interval [48.03, 54.87] pp. These formal IID results must NOT be interpreted as a valid population-level significance test: fraud records can share entity proxies and chronology.
+
+A separate descriptive validation→holdout test comparison found the median fraud amount changing from **77.00** to **63.95** (difference = −13.05 in IEEE amount units); the IID row-bootstrap illustrative interval for the median difference was [−18.80, −6.30]. KS distance ≈ **0.07619**, likewise a descriptive divergence statistic rather than rigorous i.i.d. significance evidence. Holdout fraud labels were used **only after model/strategy definition**, to assess change; they did not affect donor pools.
+
+**New thesis implication:** In Results and Discussion, rename these regimes *amount-conditioned empirical context bundles*. A strategy share shift cannot causally be attributed to amount alone, and reward ablation alone is insufficient to establish behavioral validity if ProductCD, identity and proxy composition co-vary. Optionally run matched-ProductCD donor sensitivity **with declared support restrictions**, without changing main frozen 24-cell protocol post hoc.
+
+**Execution provenance:** Independently calculated 20 Oct 2026 on the authorized Kaggle raw ZIP using a chunked, read-only local audit. The numerical output and an executable analysis script are retained in the working conversation artifacts. This addendum does **not** claim that the canonical IEEE adaptive experiment was run.
