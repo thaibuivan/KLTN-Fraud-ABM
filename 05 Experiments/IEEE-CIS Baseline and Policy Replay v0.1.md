@@ -162,3 +162,27 @@ Masked C/D/M/V fields may be preserved as detector context but must not be named
 
 Then connect:
 Static / Adaptive fraudster → feature-level IEEE event → risk rescoring → policy → queue → feedback.
+
+
+## Independent October 20 canonical frozen-baseline replication and temporal score drift
+
+A **new actual re-execution** using the exact `scripts/train_ieee_streaming_baseline.py` code from the public `chatgpt-draft` source snapshot (Git SHA `d7c398577378007842452970e68fd39ae28bff72`) and the original IEEE competition ZIP reproduced:
+- Validation PR-AUC = **0.3643868532231502**, ROC-AUC = **0.8218108469909943**, Brier = **0.02839840203523636**.
+- Held-out test PR-AUC = **0.38403028294875263**, ROC-AUC = **0.8218995788366048**, Brier = **0.0336979478597641**.
+- Saved frozen model bundle SHA256 = `3783dc167d06a335853bac3037cd6b511b8c42a59afda3826c42e64fc383b520`. Original competition ZIP SHA256 = `4cc646da09d0a9b265983ffed775b1f9ee15af5266586df610e04d6adae0b829`.
+- Original non-fast online scorer reference check on 200 unchanged holdout events: **PASS**, maximum absolute difference **6.073×10⁻⁹**.
+- **Full 88,581 event** held-out, unchanged-stream fast online scorer vs frozen saved baseline: **PASS**, maximum absolute difference **4.3138051×10⁻⁷**; mean absolute difference **1.8728532×10⁻⁸**, threshold `1e-6`. Fast-score full audit completed in approximately 11 seconds after history warmup. This checks numerical equivalence, NOT synthetic fraud realism.
+
+Additional independently computed score drift (validation-score bin definitions frozen from validation):
+
+| Metric | Validation | Holdout test |
+|---|---:|---:|
+| Mean frozen risk probability | 0.0653414 | 0.0946393 |
+| Observed fraud prevalence | 0.0343415 | 0.0348043 |
+| 10-bin expected calibration error (ECE; validation bins) | 0.031072 | 0.059835 |
+| Alert fraction at a threshold chosen for top 1% validation | 1.0002% | 1.5489% |
+| Alert fraction at a threshold chosen for top 0.5% validation | 0.5001% | 0.6615% |
+
+This is a **measurable temporal scoring/alert-load shift**. ECE depends on the binning convention and is only a diagnostic, not a universal calibration property. The 1% operating-point comparison uses `np.quantile` on serialized validation scores, hence may differ by a very small numerical amount from a threshold computed before score CSV rounding.
+
+The new actual baseline/audit was completed independently of the October 18 local mirrored pilot. The fact that canonical scoring reproduces does **not** by itself complete canonical 12×N adaptive-policy experiments; those are tracked separately.
