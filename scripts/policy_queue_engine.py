@@ -34,6 +34,9 @@ class PolicyQueueEngine:
         self.reviews: list[dict] = []
         self.server_available = None
         self.sequence = 0
+        # Exact FIFO O(1) queue-index fast path when enqueues are chronological.
+        self._fifo_monotonic = True
+        self._last_fifo_arrival = None
 
         self.service_duration = (
             pd.Timedelta(hours=1.0 / self.service_rate)
@@ -42,6 +45,8 @@ class PolicyQueueEngine:
         )
 
     def _choose_queue_index(self) -> int:
+        if self.discipline == "fifo" and self._fifo_monotonic:
+            return 0
         if self.discipline == "fifo":
             return min(
                 range(len(self.queue)),
@@ -71,6 +76,9 @@ class PolicyQueueEngine:
             self.server_available = time_limit
 
         while self.queue:
+            # A busy single pooled server cannot start ANY queued case yet.
+            if self.server_available > time_limit:
+                break
             idx = self._choose_queue_index()
             item = self.queue[idx]
             service_start = max(
@@ -132,6 +140,10 @@ class PolicyQueueEngine:
         self.decisions.append(decision)
 
         if action == Action.REVIEW:
+            if (self._last_fifo_arrival is not None
+                    and event_time < self._last_fifo_arrival):
+                self._fifo_monotonic = False
+            self._last_fifo_arrival = event_time
             self.queue.append(
                 {
                     "TransactionId": event["TransactionId"],
