@@ -1,0 +1,28 @@
+name: Research code snapshot (no data)
+
+on:
+  push:
+    branches: [chatgpt-draft]
+    paths:
+      - '.github/workflows/research-code-snapshot.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  code-snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package source for reproducibility
+        uses: actions/upload-artifact@v4
+        with:
+          name: thesis-source-snapshot
+          path: |
+            scripts/
+            tests/
+            requirements.txt
+            .gitignore
+          if-no-files-found: error
+          retention-days: 5
