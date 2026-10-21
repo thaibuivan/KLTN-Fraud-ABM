@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 
 from scripts.ieee_online_scorer import IEEEOnlineRiskScorer
+from scripts.ieee_fast_online_scorer import FastIEEEOnlineRiskScorer
 
 
 def audit_equivalence(
@@ -67,11 +68,14 @@ def main():
     p.add_argument("--test-context", required=True)
     p.add_argument("--history-context", required=True)
     p.add_argument("--model-bundle", required=True)
+    p.add_argument("--scorer", choices=["reference", "fast"], default="reference",
+                   help="Fast scorer is permitted only after its synthetic equivalence tests pass")
     p.add_argument("--n-events", type=int, default=200)
     p.add_argument("--tolerance", type=float, default=1e-6)
     p.add_argument("--output", required=True)
     a = p.parse_args()
-    scorer = IEEEOnlineRiskScorer.from_joblib(a.model_bundle)
+    scorer_class = IEEEOnlineRiskScorer if a.scorer == "reference" else FastIEEEOnlineRiskScorer
+    scorer = scorer_class.from_joblib(a.model_bundle)
     scorer.warm_history(pd.read_csv(a.history_context))
     result = audit_equivalence(
         pd.read_csv(a.test_scores),
