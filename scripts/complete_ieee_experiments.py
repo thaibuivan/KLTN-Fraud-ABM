@@ -118,18 +118,31 @@ def execute(args) -> None:
             raise RuntimeError("Partial IEEE contexts: investigate; refusing to overwrite")
         invoke([sys.executable,"-m","scripts.prepare_ieee_closed_loop",
                 "--zip",str(source),"--output-dir",str(context)])
+    # Independent 200-event exact-reference gate followed by accelerated full-heldout gate.
+    reference_audit=context/"audit_reference_200.json"
+    if not reference_audit.exists():
+        invoke([sys.executable,"-m","scripts.audit_ieee_online_equivalence",
+                "--test-scores",str(base/"test_scores.csv"),
+                "--test-context",str(test),"--history-context",str(hist),
+                "--model-bundle",str(model),"--scorer","reference",
+                "--n-events","200","--tolerance","1e-6",
+                "--output",str(reference_audit)])
+    reference_payload=json.loads(reference_audit.read_text(encoding="utf-8"))
+    if not reference_payload.get("pass") or reference_payload.get("n_events",0)<200:
+        raise RuntimeError("Exact reference scorer 200-event audit failed")
     audit=context/"audit_full.json"
     if not audit.exists():
         invoke([sys.executable,"-m","scripts.audit_ieee_online_equivalence",
                 "--test-scores",str(base/"test_scores.csv"),
                 "--test-context",str(test),"--history-context",str(hist),
-                "--model-bundle",str(model),"--n-events",str(args.audit_events),
+                "--model-bundle",str(model),"--scorer","fast",
+                "--n-events",str(args.audit_events),
                 "--tolerance","1e-6","--output",str(audit)])
     audit_payload=json.loads(audit.read_text(encoding="utf-8"))
     if not audit_payload.get("pass"):
-        raise RuntimeError("Frozen IEEE heldout score audit failed; do not run adaptive experiment")
+        raise RuntimeError("Frozen IEEE heldout fast-score audit failed; do not run adaptive experiment")
     if audit_payload.get("n_events",0) < args.audit_events:
-        raise RuntimeError("Score audit covers fewer events than requested")
+        raise RuntimeError("Fast-score audit covers fewer events than requested")
     # Descriptive donor audit is not calibration from test data.
     registry=context/"regime_audit"/"regime_registry.csv"
     if not registry.exists():
